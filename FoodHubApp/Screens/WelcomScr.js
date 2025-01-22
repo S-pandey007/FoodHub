@@ -79,6 +79,7 @@ const WelcomeScr = () => {
       {/* Registration Modal */}
       <Modal
         animationType="slide"
+        duration={3800}
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
