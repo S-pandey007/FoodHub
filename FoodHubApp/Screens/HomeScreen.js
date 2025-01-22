@@ -34,7 +34,9 @@ const HomeScreen = () => {
     <>
       <View 
       
-      style={styles.container}>
+      style={styles.container}
+      
+      >
       {/* Header */}
       <Animatable.View 
       animation="fadeInDown" direction="alternate" duration={1200}
@@ -88,7 +90,7 @@ const HomeScreen = () => {
       </View>
       
       {/* Food Cards */}
-      <View style={{marginTop: 20}}>       
+      <View style={{marginTop: 20,paddingBottom:250}}>       
       <FlatList
         data={foodCategories}
         keyExtractor={(item) => item.id.toString()}
