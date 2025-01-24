@@ -73,12 +73,16 @@ function TabNavigator() {
 const Navigation = () => {
     return (
     <NavigationContainer>
-        <Stack.Navigator initialRouteName='Welcome'>
+        <Stack.Navigator initialRouteName='Profile'>
             <Stack.Screen name="Splash" component={SplashScreen} options={{headerShown:false}}/>
             <Stack.Screen name="Welcome" component={WelcomScr} options={{headerShown:false}}/>
             <Stack.Screen name="Home" component={TabNavigator} options={{headerShown:false}}/>
             <Stack.Screen name="Search" component={SearchScree} options={{headerShown:false}}/>
             <Stack.Screen name="Detail" component={RecipeDetailScreen} options={{headerShown:false}}/>
+            <Stack.Screen name="Post" component={UserPost} options={{ headerShown: false }} />
+            <Stack.Screen name="Liked" component={LikedRecipe} options={{ headerShown: false }} />
+            <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+
         </Stack.Navigator>
     </NavigationContainer>
   )

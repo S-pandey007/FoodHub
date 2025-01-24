@@ -121,6 +121,7 @@ const HomeScreen = () => {
             
 
             {/* second card  */}
+            <Pressable onPress={()=>navigation.navigate("Detail")} style={styles.card}>
             <Animatable.View
             animation="fadeInLeft" duration={1400}
             style={styles.card}>
@@ -136,6 +137,7 @@ const HomeScreen = () => {
                 </View>
               </View>
             </Animatable.View>
+            </Pressable>
           </Animatable.View>
         )}
       />
