@@ -17,17 +17,7 @@ const HomeScreen = () => {
     { id: 7, name: "Snacks", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
     { id: 8, name: "Beverages", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
     { id: 9, name: "Bakery", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 10, name: "Desserts", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 11, name: "Fast Food", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 12, name: "Soups", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 13, name: "Salads", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 14, name: "Frozen Foods", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 15, name: "Condiments", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 16, name: "Herbs and Spices", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 17, name: "Pasta", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 18, name: "Cereals", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 19, name: "Nuts and Seeds", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 20, name: "Sauces", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
+    { id: 10, name: "Desserts", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" }
   ];
   const navigation = useNavigation()
   return (
@@ -45,10 +35,13 @@ const HomeScreen = () => {
           <Text style={styles.greetingText}>Hello, Shubham</Text>
           <Text style={styles.subGreetingText}>What do you want today?</Text>
         </View>
+        <Pressable onPress={()=>navigation.navigate("Profile")}>
+
         <Image
           style={styles.profileImage}
           source={{ uri: "https://yt3.ggpht.com/yti/ANjgQV9v56tO5WccYmiXtKsAVQxg7KhnxfANPiyr56F1uDPSv68=s88-c-k-c0x00ffffff-no-rj" }}
         />
+        </Pressable>
       </Animatable.View>
 
       {/* Search Bar */}
@@ -59,9 +52,12 @@ const HomeScreen = () => {
           <Feather name="search" size={20} color="#999" />
           <TextInput style={styles.searchInput} placeholder="Search for recipes..." />
         </View>
-        <Pressable style={styles.filterButton}>
-          <Feather name="filter" size={20} color="#fff" />
+        <Pressable onPress={()=>navigation.navigate("Search")} style={{backgroundColor:'#973838',padding:10,borderRadius:10,marginRight:5}}>
+          <Text style={{fontSize:18,fontWeight:'600',color:'#fff'}}>search</Text>
         </Pressable>
+        {/* <Pressable style={styles.filterButton}>
+          <Feather name="filter" size={20} color="#fff" />
+        </Pressable> */}
       </Animatable.View>
 
       {/* Categories */}
@@ -74,7 +70,8 @@ const HomeScreen = () => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoryList}
         renderItem={({ item }) => (
-          <Animatable.View
+          <Pressable onPress={()=> navigation.navigate("CategoryDetail")}>
+            <Animatable.View
           animation="fadeInRight" duration={1200}
           style={styles.categoryContainer}>
             <Image style={styles.categoryImage} source={{uri:item.image}}/>
@@ -85,6 +82,7 @@ const HomeScreen = () => {
               <Text style={styles.categoryText}>{item.name}</Text>
             </LinearGradient>
           </Animatable.View>
+          </Pressable>
         )}
       />
       </View>
@@ -184,7 +182,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     flex: 1,
     marginRight: 10,
     height: 50,

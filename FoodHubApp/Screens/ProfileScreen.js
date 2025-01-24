@@ -15,6 +15,7 @@ import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { useState } from "react";
 import  {useNavigation} from '@react-navigation/native'
 import * as Animatable from 'react-native-animatable';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 const ProfileScreen = () => {
   const Profile_Option = [
     { id: "1", option: "Post" },
@@ -142,10 +143,18 @@ const ProfileScreen = () => {
           <Pressable onPress={()=>setMenuModal(false)} style={{flexDirection:'row-reverse'}}>
             <Entypo name="cross" size={24} color="black" />
           </Pressable>
-            <Pressable><Text style={{fontSize:16}}>Edit profile</Text></Pressable>
-            <Pressable><Text style={{fontSize:16}}>change password</Text></Pressable>
-            <Pressable><Text style={{fontSize:16}}>logout</Text></Pressable>
-            <Pressable><Text style={{fontSize:16}}>delete account</Text></Pressable>
+            <Pressable style={{flexDirection:'row',gap:10}}>
+            <AntDesign name="edit" size={20} color="black" />
+              <Text style={{fontSize:16}}>Edit profile</Text></Pressable>
+            <Pressable style={{flexDirection:'row',gap:10}}>
+            <MaterialIcons name="password" size={20} color="black" />
+              <Text style={{fontSize:16}}>change password</Text></Pressable>
+            <Pressable style={{flexDirection:'row',gap:10}}>
+            <MaterialIcons name="logout" size={20} color="black" />
+              <Text style={{fontSize:16}}>logout</Text></Pressable>
+            <Pressable style={{flexDirection:'row',gap:10}}>
+            <AntDesign name="deleteuser" size={20} color="black" />
+              <Text style={{fontSize:16}}>delete account</Text></Pressable>
           </View>
         </View>
       </Modal>
