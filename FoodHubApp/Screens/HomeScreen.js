@@ -1,25 +1,30 @@
 import { View, Text, Image, StyleSheet,ScrollView } from 'react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Feather from '@expo/vector-icons/Feather';
 import { FlatList, Pressable, TextInput } from 'react-native-gesture-handler';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios'
 const HomeScreen = () => {
-  const foodCategories = [
-    { id: 1, name: "Fruits", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 2, name: "Vegetables", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 3, name: "Dairy", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 4, name: "Meat", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 5, name: "Seafood", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 6, name: "Grains", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 7, name: "Snacks", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 8, name: "Beverages", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 9, name: "Bakery", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" },
-    { id: 10, name: "Desserts", image: "https://lh3.googleusercontent.com/a/AEdFTp7_F3RiM9QFW0h1Lrflcjd-Dpj6HaTFhbZdSrrH=s96-c" }
-  ];
+  
+
+  const [meals ,setMeals] = useState()
+  const [loading , setLoading] = useState(true)
   const navigation = useNavigation()
+
+  useEffect(()=>{
+   const FetchData = async()=>{
+      const Data = await axios.get('https://www.themealdb.com/api/json/v1/1/search.php?s')
+      const JSONdata = Data.data 
+      setMeals(JSONdata || [])
+      
+    }
+    FetchData()
+  },[])
+  console.log(meals);
+  
   return (
     <>
       <View 
@@ -64,8 +69,9 @@ const HomeScreen = () => {
       <View style={{backgroundColor:'',borderRadius:12}}>
 
       <FlatList
-        data={foodCategories}
-        keyExtractor={(item) => item.id.toString()}
+        // data={foodCategories}
+        data={meals}
+        keyExtractor={(item) => item.idMeal.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoryList}
@@ -74,12 +80,12 @@ const HomeScreen = () => {
             <Animatable.View
           animation="fadeInRight" duration={1200}
           style={styles.categoryContainer}>
-            <Image style={styles.categoryImage} source={{uri:item.image}}/>
+            <Image style={styles.categoryImage} source={{uri:item.strMealThumb}}/>
             <LinearGradient
               colors={['transparent', 'rgba(0, 0, 0, 0.6)']}
               style={styles.overlay}
             >
-              <Text style={styles.categoryText}>{item.name}</Text>
+              <Text style={styles.categoryText}>{item.strCategory}</Text>
             </LinearGradient>
           </Animatable.View>
           </Pressable>
@@ -90,8 +96,9 @@ const HomeScreen = () => {
       {/* Food Cards */}
       <View style={{marginTop: 20,paddingBottom:250}}>       
       <FlatList
-        data={foodCategories}
-        keyExtractor={(item) => item.id.toString()}
+        // data={foodCategories}
+        data={meals}
+        keyExtractor={(item) => item.idMeal.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.cardList}
         renderItem={({ item }) => (

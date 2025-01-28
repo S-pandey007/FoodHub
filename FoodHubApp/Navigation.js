@@ -47,7 +47,7 @@ function TabNavigator() {
           
         },
         tabBarStyle: {
-          backgroundColor: 'rgba(255, 255, 255, 0.99)', // Transparent white background for a floating effect
+          // backgroundColor: 'rgba(255, 255, 255, 0.99)', // Transparent white background for a floating effect
           paddingVertical: 19, // Slightly reduced padding for a clean look
           borderRadius: 20, // Rounded corners for a premium feel
           marginHorizontal: 14, // Margin for positioning
