@@ -14,7 +14,7 @@ import axios from "axios";
 const CategorieDetail = ({ route }) => {
   const categories = route.params;
   const categoriesName = categories.CategoryName;
-  // console.log(categoriesName);
+  // console.log("this from categorieDeail Screen :",categoriesName);
 
   // console.log(categories);
   const [meals, setMeals] = useState([]);
@@ -28,21 +28,23 @@ const CategorieDetail = ({ route }) => {
           `https://www.themealdb.com/api/json/v1/1/filter.php?c=${categoriesName}`
         );
         const JSONData = Data.data.meals;
-        setMeals(JSONData);
+        setMeals(JSONData || []);
       } catch (error) {
         console.log(`Error to fetch ${categories} data : `, error);
       }
     };
 
     fetchCategoryData();
-  }, []);
-  // console.log(meals);
+  }, [categoriesName]);
+  // console.log("THis is data of specific category : ", meals);
 
   const sendMeals_Data_To_DetailScreen = async(idMeal)=>{
-    console.log("food id : " ,idMeal);
+    // console.log(" this food id on category screen sendmeal data to detailscreen : " ,idMeal);
     try {
       const Data = await axios.get(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${idMeal}`)
-      const JSONData = Data.data.meals[0];
+      const JSONData = Data.data.meals;
+      // console.log("this data of id based meal ",JSONData);
+      
       navigation.navigate("Detail", JSONData);
       
     } catch (error) {
@@ -65,7 +67,7 @@ const CategorieDetail = ({ route }) => {
         />
         <Text style={styles.headText}>Food Categorie</Text>
       </View>
-      <View style={{ paddingBottom: 20 }}>
+      <View style={{ paddingBottom: 60 }}>
         <FlatList
           data={meals}
           keyExtractor={(item) => item.idMeal.toString()}

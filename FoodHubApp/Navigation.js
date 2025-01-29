@@ -12,7 +12,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import RecipeDetailScreen from './Screens/RecipeDetailScreen';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
+import HomeFoodDetail from './Screens/HomeFoodDetail'
 import CategorieDetail from './Screens/CategorieDetail';
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator();
@@ -85,6 +85,7 @@ const Navigation = () => {
             <Stack.Screen name="Liked" component={LikedRecipe} options={{ headerShown: false }} />
             <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
             <Stack.Screen name="CategoryDetail" component={CategorieDetail} options={{ headerShown: false }}/>
+            <Stack.Screen name='HomeFoodDetail' component={HomeFoodDetail} options={{ headerShown: false }}/>
         </Stack.Navigator>
     </NavigationContainer>
   )

@@ -128,7 +128,7 @@ const HomeScreen = () => {
             duration={1200} 
             style={styles.rowContainer}
           >
-            <Pressable onPress={() => navigation.navigate("Detail",{meal:item})} style={styles.card}>
+            <Pressable onPress={() => navigation.navigate("HomeFoodDetail",{meal:item})} style={styles.card}>
               <Image style={styles.cardImage} source={{ uri: item.strMealThumb }} />
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{item.strMeal}</Text>

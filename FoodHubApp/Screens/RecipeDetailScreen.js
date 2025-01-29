@@ -13,7 +13,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 const RecipeDetailScreen = ({ route }) => {
-  const { meal } = route.params;
+  const  meal  = route?.params[0];
+  
   const navigation = useNavigation();
   const mealName = meal.strMeal;
   const category = meal.strCategory;
@@ -24,12 +25,16 @@ const RecipeDetailScreen = ({ route }) => {
   
   const ingredients = [];
   for (let i = 1; i <= 20; i++) {
-    const ingredient = meal[`strIngredient${i}`];
+    const ingredient = meal[`strIngredient${i}`] ||"";
     if (ingredient && ingredient.trim() !== "") {
       ingredients.push(ingredient);
     }
   }
-console.log("Detail meal screen : ",meal);
+  
+  // console.log("Detail meal screen : ",meal);
+  // console.log(meal.strIngredient1||"");
+  // console.log("mealName : ",mealName);
+  
 
 
 
@@ -51,7 +56,7 @@ console.log("Detail meal screen : ",meal);
           duration={1200}
           style={styles.imageContainer}
         >
-          <Image style={styles.thumbnailImage} source={{ uri: thumbnail }} />
+          <Image style={styles.thumbnailImage} source={{uri:thumbnail}} />
           <LinearGradient
             colors={["transparent", "rgba(0, 0, 0, 0.6)"]}
             style={styles.overlay}
@@ -113,16 +118,16 @@ console.log("Detail meal screen : ",meal);
           style={styles.processContainer}
         >
           <Text style={styles.sectionTitle}>Cooking Process</Text>
-          {process
-            .split(/STEP \d+/) // Correct splitting regex
-            .filter((step) => step.trim()) // Filter out empty strings
+          {
+            process.split(/STEP \d+/) 
+            .filter((step) => step.trim()) 
             .map((step, index) => (
               <View style={styles.stepContainer} key={index}>
-                {/* Step number */}
+                
                 <Text style={styles.stepNumber}>Step {index + 1}</Text>
-                {/* Step description */}
+                
                 <Text style={styles.stepText}>
-                  {step.replace(/\.+$/, "") /* Remove trailing periods */}
+                  {step.replace(/\.+$/, "") }
                 </Text>
               </View>
             ))}
