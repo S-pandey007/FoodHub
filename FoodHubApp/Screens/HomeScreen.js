@@ -10,20 +10,41 @@ import axios from 'axios'
 const HomeScreen = () => {
   
 
-  const [meals ,setMeals] = useState()
+  const [meals ,setMeals] = useState([])
+  const [category , setCategory] = useState([])
   const [loading , setLoading] = useState(true)
   const navigation = useNavigation()
 
   useEffect(()=>{
    const FetchData = async()=>{
+    try {
       const Data = await axios.get('https://www.themealdb.com/api/json/v1/1/search.php?s')
-      const JSONdata = Data.data 
+      const JSONdata = Data.data.meals 
       setMeals(JSONdata || [])
+    } catch (error) {
+      console.error("Fetching meals : ",error);
       
     }
+    }
+
+    const FetchCategory = async()=>{
+      try {
+        const Data = await axios.get("https://www.themealdb.com/api/json/v1/1/categories.php?")
+      const JSONdata = Data.data.categories
+      setCategory(JSONdata || [])
+      } catch (error) {
+        console.error("Fetching category : ",error);
+      }
+      
+      // console.log("categorys : ",category);
+      
+    }
+    
+
     FetchData()
+    FetchCategory()
   },[])
-  console.log(meals);
+  // console.log(meals);
   
   return (
     <>
@@ -70,17 +91,17 @@ const HomeScreen = () => {
 
       <FlatList
         // data={foodCategories}
-        data={meals}
-        keyExtractor={(item) => item.idMeal.toString()}
+        data={category}
+        keyExtractor={(item) => item.idCategory.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoryList}
         renderItem={({ item }) => (
-          <Pressable onPress={()=> navigation.navigate("CategoryDetail")}>
+          <Pressable onPress={()=> navigation.navigate("CategoryDetail",{CategoryName:item.strCategory})}>
             <Animatable.View
           animation="fadeInRight" duration={1200}
           style={styles.categoryContainer}>
-            <Image style={styles.categoryImage} source={{uri:item.strMealThumb}}/>
+            <Image style={styles.categoryImage} source={{uri:item.strCategoryThumb}}/>
             <LinearGradient
               colors={['transparent', 'rgba(0, 0, 0, 0.6)']}
               style={styles.overlay}
@@ -103,48 +124,26 @@ const HomeScreen = () => {
         contentContainerStyle={styles.cardList}
         renderItem={({ item }) => (
           <Animatable.View 
-          animation="fadeInLeft" duration={1200}
-          style={styles.rowContainer}>
-            {/* first card  */}
-            <Pressable onPress={()=>navigation.navigate("Detail")} style={styles.card}>
-            <Animatable.View 
-            animation="fadeInLeft" duration={1200}
-            >
-              <Image style={styles.cardImage} source={{uri:item.image}}/>
+            animation="fadeInLeft" 
+            duration={1200} 
+            style={styles.rowContainer}
+          >
+            <Pressable onPress={() => navigation.navigate("Detail",{meal:item})} style={styles.card}>
+              <Image style={styles.cardImage} source={{ uri: item.strMealThumb }} />
               <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardSubtitle}>Categorie</Text>
+                <Text style={styles.cardTitle}>{item.strMeal}</Text>
+                <Text style={styles.cardSubtitle}>{item.strCategory}</Text>
                 <View style={styles.cardFooter}>
-                  <Text style={styles.cardPrice}>Rs.20</Text>
+                  <Text style={styles.cardPrice}>{item.strArea}</Text>
                   <Pressable style={styles.heartIcon}>
-                  <AntDesign name="hearto" size={20} color="#ff6f61" />
+                    <AntDesign name="hearto" size={20} color="#ff6f61" />
                   </Pressable>
                 </View>
               </View>
-            </Animatable.View>
-            </Pressable>
-            
-
-            {/* second card  */}
-            <Pressable onPress={()=>navigation.navigate("Detail")} style={styles.card}>
-            <Animatable.View
-            animation="fadeInLeft" duration={1400}
-            style={styles.card}>
-              <Image style={styles.cardImage} source={{uri:item.image}}/>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardSubtitle}>Categorie</Text>
-                <View style={styles.cardFooter}>
-                  <Text style={styles.cardPrice}>Rs.20</Text>
-                  <Pressable style={styles.heartIcon}>
-                  <AntDesign name="hearto" size={20} color="#ff6f61" />
-                  </Pressable>
-                </View>
-              </View>
-            </Animatable.View>
             </Pressable>
           </Animatable.View>
         )}
+        
       />
       </View>
     </View>
@@ -250,59 +249,70 @@ const styles = StyleSheet.create({
     paddingHorizontal: 1,
     paddingBottom: 20,
   },
-
-  rowContainer:{
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-    gap:10
-  },  
-
-  card:{
-    flex:1,
-    backgroundColor: '#f5f5f5',
+  rowContainer: {
+    marginBottom: 16, // Add spacing between rows of cards
+  },
+  
+  card: {
+    flexDirection: 'column', // Ensure content stacks vertically
+    backgroundColor: '#fff',
     borderRadius: 12,
-    marginHorizontal:3,
+    marginHorizontal: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     elevation: 5,
+    overflow: 'hidden', // Ensure content stays within rounded corners
   },
-
-  cardContent:{
-    padding:10,
+  
+  cardContent: {
+    padding: 10,
   },
-
-  cardImage:{
+  
+  cardImage: {
     width: '100%',
-    height: 150,
+    height: 200, // Adjust height for better visuals
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
-
-  cardTitle:{
-    fontSize: 16,
+  
+  cardTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 5,
   },
-
+  
   cardSubtitle: {
-    fontSize: 12,
-    color: '#888',
-    marginVertical: 5,
+    fontSize: 14,
+    color: '#777',
+    // marginBottom: 8,
   },
+  
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
   },
+  
   cardPrice: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#ff6f61',
   },
+  
+  heartIcon: {
+    padding: 8,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  
   
 });
 

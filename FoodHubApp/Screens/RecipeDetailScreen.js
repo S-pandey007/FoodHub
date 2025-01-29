@@ -11,27 +11,29 @@ import {
 import { AntDesign } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import * as Animatable from 'react-native-animatable';
-const RecipeDetailScreen = () => {
+import * as Animatable from "react-native-animatable";
+const RecipeDetailScreen = ({ route }) => {
+  const { meal } = route.params;
   const navigation = useNavigation();
-  const mealName = "Spaghetti Bolognese";
-  const category = "Italian";
-  const area = "Italy";
-  const process =
-    "Fry the finely chopped onions and minced meat in oil. Add the salt and pepper. Grease a round baking tray and put a layer of pastry in it. Cover with a thin layer of filling and cover this with another layer of filo pastry which must be well coated in oil. Put another layer of filling and cover with pastry. When you have five or six layers, cover with filo pastry, bake at 200ºC/392ºF for half an hour and cut in quarters and serve.";
-  const thumbnail =
-    "https://www.themealdb.com/images/media/meals/g046bb1663960946.jpg";
-  const youtubeLink = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-  const ingredients = [
-    "Spaghetti",
-    "Ground beef",
-    "Tomatoes",
-    "Garlic",
-    "Olive oil",
-    "Onion",
-    "Basil",
-    "Parmesan cheese",
-  ];
+  const mealName = meal.strMeal;
+  const category = meal.strCategory;
+
+  const process = meal.strInstructions;
+
+  const thumbnail = meal.strMealThumb;
+  
+  const ingredients = [];
+  for (let i = 1; i <= 20; i++) {
+    const ingredient = meal[`strIngredient${i}`];
+    if (ingredient && ingredient.trim() !== "") {
+      ingredients.push(ingredient);
+    }
+  }
+console.log("Detail meal screen : ",meal);
+
+
+
+
 
   return (
     <>
@@ -39,29 +41,37 @@ const RecipeDetailScreen = () => {
         contentContainerStyle={{ paddingBottom: 100, paddingTop: 20 }}
         style={styles.container}
       >
-        <Pressable onPress={()=>navigation.goBack()} style={styles.header}>
+        <Pressable onPress={() => navigation.goBack()} style={styles.header}>
           <AntDesign name="arrowleft" size={24} color="black" />
         </Pressable>
 
         {/* Meal Thumbnail and Title */}
         <Animatable.View
-        animation="fadeInDown" duration={1200}
-        style={styles.imageContainer}>
-          <Image 
-           
-          style={styles.thumbnailImage} source={{ uri: thumbnail }} />
+          animation="fadeInDown"
+          duration={1200}
+          style={styles.imageContainer}
+        >
+          <Image style={styles.thumbnailImage} source={{ uri: thumbnail }} />
           <LinearGradient
             colors={["transparent", "rgba(0, 0, 0, 0.6)"]}
             style={styles.overlay}
           >
-            <Animatable.Text animation="fadeInDown" duration={1200} style={styles.mealNameText}>{mealName}</Animatable.Text>
+            <Animatable.Text
+              animation="fadeInDown"
+              duration={1200}
+              style={styles.mealNameText}
+            >
+              {mealName}
+            </Animatable.Text>
           </LinearGradient>
         </Animatable.View>
 
         {/* Like/Dislike & Heart Icons */}
         <Animatable.View
-         animation="fadeInDown" duration={1200}
-         style={styles.actionsContainer}>
+          animation="fadeInDown"
+          duration={1200}
+          style={styles.actionsContainer}
+        >
           <View style={styles.actionsLeft}>
             <AntDesign
               name="like2"
@@ -83,9 +93,11 @@ const RecipeDetailScreen = () => {
         </Animatable.View>
 
         {/* Title and YouTube Video */}
-        <Animatable.View 
-        animation="fadeInDown" duration={1200}
-        style={styles.titleContainer}>
+        <Animatable.View
+          animation="fadeInDown"
+          duration={1200}
+          style={styles.titleContainer}
+        >
           <LinearGradient
             colors={["#ff6f61", "#ff3b30"]}
             style={styles.categoryTag}
@@ -96,21 +108,33 @@ const RecipeDetailScreen = () => {
 
         {/* Cooking Process */}
         <Animatable.View
-         animation="fadeInDown" duration={1200}
-         style={styles.processContainer}>
+          animation="fadeInDown"
+          duration={1200}
+          style={styles.processContainer}
+        >
           <Text style={styles.sectionTitle}>Cooking Process</Text>
-          {process.split(". ").map((step, index) => (
-            <Text style={styles.processStep} key={index}>
-              {index + 1}.{step.trim()}
-            </Text>
-          ))}
+          {process
+            .split(/STEP \d+/) // Correct splitting regex
+            .filter((step) => step.trim()) // Filter out empty strings
+            .map((step, index) => (
+              <View style={styles.stepContainer} key={index}>
+                {/* Step number */}
+                <Text style={styles.stepNumber}>Step {index + 1}</Text>
+                {/* Step description */}
+                <Text style={styles.stepText}>
+                  {step.replace(/\.+$/, "") /* Remove trailing periods */}
+                </Text>
+              </View>
+            ))}
         </Animatable.View>
 
         {/* Ingredients List */}
 
-        <Animatable.View 
-        animation="fadeInDown" duration={1200}
-        style={styles.ingredientsContainer}>
+        <Animatable.View
+          animation="fadeInDown"
+          duration={1200}
+          style={styles.ingredientsContainer}
+        >
           <Text style={styles.sectionTitle}>Ingredients</Text>
           <View style={styles.ingredientsList}>
             {ingredients.map((ingredient, index) => (
@@ -250,6 +274,22 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     marginRight: 10,
     marginBottom: 10,
+  },
+  stepContainer: {
+    marginBottom: 16,
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  stepText: {
+    fontSize: 16,
+    color: "#555",
+    lineHeight: 22,
   },
 });
 
