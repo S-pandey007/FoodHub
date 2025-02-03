@@ -134,7 +134,7 @@ const UserPost = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <AntDesign name="arrowleft" size={24} color="black" />
+        <AntDesign onPress={()=>navigation.goBack()} name="arrowleft" size={24} color="black" />
         <Text style={styles.headerTitle}>FoodHub</Text>
       </View>
 
@@ -293,6 +293,7 @@ const styles = StyleSheet.create({
     flex:1,
     backgroundColor:'white',
     padding:16,
+    marginBottom:30
   },
 
   header:{
@@ -330,7 +331,8 @@ const styles = StyleSheet.create({
     backgroundColor:'#f9f9f9',
     borderRadius:10,
     padding:15,
-    marginBottom:10
+    marginBottom:20,
+
   },
   
   postHeader:{
@@ -376,12 +378,13 @@ const styles = StyleSheet.create({
     fontSize:14
   },
   postContent:{
-    marginTop:10
+    marginTop:10,
   },
   postText:{
     fontSize:14,
     color:'black',
-    marginTop:10
+    marginTop:10,
+    marginBottom:4
   },
   postImage:{
     width:'100%',
