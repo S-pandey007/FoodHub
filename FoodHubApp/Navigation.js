@@ -14,6 +14,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeFoodDetail from './Screens/HomeFoodDetail'
 import CategorieDetail from './Screens/CategorieDetail';
+import CreatePost from './Screens/CreatePost';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import PostDetailScreen from './Screens/PostDetailScreen';
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator();
 // Tab Navigator
@@ -32,8 +35,8 @@ function TabNavigator() {
             )
           } else if(route.name==="Post"){
             return focused? (<MaterialCommunityIcons name="post" size={26} color="#973838" />):(<MaterialCommunityIcons name="post-outline" size={24} color="#973838" />)
-          }else if(route.name==="Liked"){
-            return focused? (<MaterialCommunityIcons name="heart" size={26} color="#973838" />):(<MaterialCommunityIcons name="heart-outline" size={24} color="#973838" />)
+          }else if(route.name==="CreatePost"){
+            return focused? (<Ionicons name="create-sharp" size={24} color="#973838" />):(<Ionicons name="create-outline" size={24} color="#973838" />)
           }else if(route.name==="Profile"){
             return focused? (<MaterialCommunityIcons name="account" size={28} color="#973838" />):(<MaterialCommunityIcons name="account-outline" size={24} color="#973838" />)
           }
@@ -66,7 +69,7 @@ function TabNavigator() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Post" component={UserPost} options={{ headerShown: false }} />
-      <Tab.Screen name="Liked" component={LikedRecipe} options={{ headerShown: false }} />
+      <Stack.Screen name='CreatePost' component={CreatePost} options={{ headerShown: false }}/>
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
       
     </Tab.Navigator>
@@ -86,6 +89,8 @@ const Navigation = () => {
             <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
             <Stack.Screen name="CategoryDetail" component={CategorieDetail} options={{ headerShown: false }}/>
             <Stack.Screen name='HomeFoodDetail' component={HomeFoodDetail} options={{ headerShown: false }}/>
+            <Stack.Screen name='CreatePost' component={CreatePost} options={{ headerShown: false }}/>
+            <Stack.Screen name='PostDetail' component={PostDetailScreen} options={{ headerShown: false }}/>
         </Stack.Navigator>
     </NavigationContainer>
   )
