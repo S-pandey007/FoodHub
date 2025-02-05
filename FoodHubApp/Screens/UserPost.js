@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
 
   subscribeButton:{
-    backgroundColor:'#1DA1F2',
+    backgroundColor:'#ac6060',
     paddingHorizontal:10,
     paddingVertical:5,
     borderRadius:5

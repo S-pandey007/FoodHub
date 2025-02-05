@@ -9,12 +9,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  Image
+  Image,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
+// import Video from "react-native-video";
+
 import * as ImagePicker from "expo-image-picker";
 const CreatePost = () => {
   const navigation = useNavigation();
@@ -24,8 +26,47 @@ const CreatePost = () => {
   const [inputTextSteps, setInputTextSteps] = useState();
   const [image, setImage] = useState([]);
 
+
+  const [title,setTitle] = useState()
+  const  [description , setDescription] = useState()
+  const [category,setCategory] = useState()
+
+  const [Postdata,setPostData] = useState({
+    title:"",
+    description:"",
+    image:[],
+    category:"",
+    difficulty:"",
+    ingredient:[],
+    steps:[],
+  })
+  // const [video ,setVideo] = useState([])
+
   const [steps, setSteps] = useState([]);
   // console.log("ingredient : ",ingredient)
+
+  // send data 
+const sendData = ()=>{
+  setPostData({...Postdata,
+    title:title,
+    description:description,
+    image:image,
+    category:category,
+    difficulty:difficulty,
+    ingredient:ingredient,
+    steps:steps
+  })
+  console.log("Postdata :", Postdata);
+  setCategory("")
+  setDescription("")
+  setDifficulty("")
+  setIngredient("")
+  setImage("")
+  setTitle("")
+  setSteps("")
+  
+}
+
 
   const addIngredients = () => {
     setIngredient([...ingredient, inputTextIngredient]);
@@ -33,11 +74,15 @@ const CreatePost = () => {
     // console.log(ingredient);
   };
 
+  // const deleteIngredient = (index) => {
+  //   // console.log(index);
+  //   ingredient.splice(index, 1);
+  //   setIngredient([...ingredient]);
+  //   // console.log(ingredient);
+  // };
+
   const deleteIngredient = (index) => {
-    // console.log(index);
-    ingredient.splice(index, 1);
-    setIngredient([...ingredient]);
-    // console.log(ingredient);
+    setIngredient((prev) => prev.filter((_, i) => i !== index));
   };
 
   const addSteps = () => {
@@ -47,20 +92,25 @@ const CreatePost = () => {
     setInputTextSteps("");
   };
 
+  // const deleteSteps = (index) => {
+  //   steps.splice(index, 1);
+  //   setSteps([...steps]);
+  // };
+
   const deleteSteps = (index) => {
-    steps.splice(index, 1);
-    setSteps([...steps]);
+    console.log(index);
+    setSteps((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // const deleteImgae = (index)=>{
+  //     image.splice(index,1);
+  //     setImage([...image])
+  // }
+
+  const deleteImage = (index) => {
+    setImage((prev) => prev.filter((_, i) => i !== index));
+  }
   const pickImage = async () => {
-    // const {status} = ImagePicker.requestCameraPermissionsAsync();
-    // console.log(status);
-
-    // if(status!=="granted"){
-    //   Alert.alert("Permission Denied", "You need to allow access to photos")
-    //   return
-    // }
-
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -76,9 +126,29 @@ const CreatePost = () => {
     }
   };
 
+  // const pickVideo = async () => {
+
+  //   let result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+  //     allowsEditing: true,
+  //     quality: 1,
+  //   });
+
+  //   if (!result.canceled) {
+  //     setVideo((prevVideos) => [
+  //       ...prevVideos,
+  //       ...result.assets.map((asset) => asset.uri),
+  //     ]);
+  //   }
+  // };
+
   useEffect(() => {
     console.log("image uri : ", image);
   }, [image]);
+
+  // useEffect(() => {
+  //   console.log("video uri : ", video);
+  // }, [video]);
 
   return (
     <KeyboardAvoidingView
@@ -100,7 +170,7 @@ const CreatePost = () => {
         {/* Title */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Enter Title</Text>
-          <TextInput placeholder="Enter title" style={styles.input} />
+          <TextInput value={title} onChangeText={setTitle} placeholder="Enter title" style={styles.input} />
         </View>
 
         {/* Description */}
@@ -109,6 +179,8 @@ const CreatePost = () => {
           <TextInput
             placeholder="Enter description"
             style={styles.input}
+            value={description}
+            onChangeText={setDescription}
             multiline
           />
         </View>
@@ -130,23 +202,89 @@ const CreatePost = () => {
             />
           </View>
           {/* Image Picker Component can be added here */}
-          <ScrollView horizontal style={{ width: 'auto', height: 'auto'}} >
-            {image && (
-              image.map((src,index)=>(
-                <Image
+          <ScrollView horizontal style={{ width: "auto", height: "auto" }}>
+            {image &&
+              image.map((src, index) => (
+                <View key={index}>
+                  <Image
+                    source={{ uri: src }}
+                    style={{
+                      width: 200,
+                      height: 200,
+                      marginTop: 10,
+                      marginRight: 5,
+                    }}
+                  />
+                  <Pressable
+                  onPress={()=>deleteImage(index)}
+                    style={{
+                      backgroundColor: "#973838",
+                      borderRadius: 17,
+                      justifyContent: "center",
+                      shadowColor: "#973838",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 4,
+                      elevation: 10,
+                      width: 35,
+                      height: 35,
+                      alignItems: "center",
+                      bottom:39,
+                      left:80
+                    }}
+                  >
+                    <AntDesign
+                      onPress={() => {
+                        deleteSteps(index);
+                      }}
+                      style={{ padding: 3 }}
+                      name="delete"
+                      size={20}
+                      color="#fff"
+                    />
+                  </Pressable>
+                </View>
+              ))}
+          </ScrollView>
+        </View>
+
+        {/* Add Video*/}
+        {/* <View style={styles.inputContainer}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={styles.label}>Add Videos</Text>
+            <AntDesign
+              onPress={pickVideo}
+              name="plus"
+              size={24}
+              color="black"
+            />
+          </View>
+          {/* Image Picker Component can be added here */}
+        {/* <ScrollView horizontal style={{ width: 'auto', height: 'auto'}} >
+            {video && (
+              video.map((src,index)=>(
+                <Video
                 key={index}
                 source={{ uri: src }}
                 style={{ width: 200, height: 200, marginTop: 10 , marginRight:5}}
+                useNativeControls
+                resizeMode="contain"
+                shouldPlay
               />
               ))
             )}
-          </ScrollView>
-        </View>
+          </ScrollView> */}
+        {/* </View> */}
 
         {/* Category */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Category</Text>
-          <TextInput placeholder="Enter category" style={styles.input} />
+          <TextInput value={category} onChangeText={setCategory} placeholder="Enter category" style={styles.input} />
         </View>
 
         {/* Difficulty Selection */}
@@ -199,6 +337,7 @@ const CreatePost = () => {
             <ScrollView horizontal style={styles.ingredientsList}>
               {ingredient.map((ingredient, index) => (
                 <View
+                key={index}
                   style={{
                     flexDirection: "row",
                     marginRight: 8,
@@ -208,7 +347,7 @@ const CreatePost = () => {
                   }}
                 >
                   <View style={styles.ingredientContainer}>
-                    <Text key={index} style={styles.ingredientItem}>
+                    <Text  style={styles.ingredientItem}>
                       {ingredient}
                     </Text>
                   </View>
@@ -312,7 +451,7 @@ const CreatePost = () => {
         </View>
 
         {/* Submit Button */}
-        <Pressable style={styles.postButton}>
+        <Pressable onPress={sendData} style={styles.postButton}>
           <Text style={styles.postButtonText}>Post</Text>
         </Pressable>
       </ScrollView>
@@ -348,10 +487,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 5,
   },
-  selectedDifficulty: { backgroundColor: "#007bff", borderColor: "#007bff" },
+  selectedDifficulty: { backgroundColor: "#ac6060", borderColor: "#ac6060" },
   difficultyText: { fontSize: 16, color: "black" },
   postButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#ac6060",
     padding: 15,
     borderRadius: 5,
     alignItems: "center",
@@ -368,7 +507,7 @@ const styles = StyleSheet.create({
   ingredientContainer: {
     padding: 6,
     borderRadius: 5,
-    backgroundColor: "#f24c33",
+    backgroundColor: "#ac6060",
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -381,7 +520,7 @@ const styles = StyleSheet.create({
   },
 
   addButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#ac6060",
     padding: 10,
     paddingHorizontal: 20,
     borderRadius: 8,

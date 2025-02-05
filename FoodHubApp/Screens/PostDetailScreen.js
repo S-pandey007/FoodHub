@@ -133,8 +133,8 @@ const PostDetailScreen = () => {
           <Text style={styles.sectionTitle}>Ingredients</Text>
           <View style={styles.ingredientsList}>
             {postData.post.ingredients.map((ingredient, index) => (
-              <View style={styles.ingredientContainer}>
-                <Text key={index} style={styles.ingredientItem}>
+              <View key={index} style={styles.ingredientContainer}>
+                <Text  style={styles.ingredientItem}>
                 {ingredient}
               </Text>
               </View>
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   subscribeButton: {
-    backgroundColor: "#1DA1F2",
+    backgroundColor: "#ac6060",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 5,
@@ -283,14 +283,14 @@ const styles = StyleSheet.create({
     color: "#fff",
     padding:6,
     borderRadius:8,
-    backgroundColor:'red'
+    backgroundColor:'#ac6060'
   },
   difficulty: {
     fontSize: 14,
     color: "white",
     padding:6,
     borderRadius:8,
-    backgroundColor:'gray'
+    backgroundColor:'#ac6060'
   },
   sectionTitle: {
     fontSize: 18,
