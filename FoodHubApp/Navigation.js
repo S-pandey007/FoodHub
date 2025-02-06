@@ -17,6 +17,7 @@ import CategorieDetail from './Screens/CategorieDetail';
 import CreatePost from './Screens/CreatePost';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import PostDetailScreen from './Screens/PostDetailScreen';
+import SearchDetailScreen from './Screens/SearchDetailScreen'
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator();
 // Tab Navigator
@@ -91,6 +92,7 @@ const Navigation = () => {
             <Stack.Screen name='HomeFoodDetail' component={HomeFoodDetail} options={{ headerShown: false }}/>
             <Stack.Screen name='CreatePost' component={CreatePost} options={{ headerShown: false }}/>
             <Stack.Screen name='PostDetail' component={PostDetailScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name='SearchDetail' component={SearchDetailScreen} options={{ headerShown: false }}/>
         </Stack.Navigator>
     </NavigationContainer>
   )

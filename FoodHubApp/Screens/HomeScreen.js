@@ -102,7 +102,7 @@ const HomeScreen = () => {
         {/* </Animatable.View> } */}
 
         <View style={styles.searchContainer}>
-          <Pressable onPress={navigation.navigate("Search")} style={styles.fab}>
+          <Pressable onPress={()=>navigation.navigate("Search")} style={styles.fab}>
             <Feather name="search" size={24} color="#fff" />
           </Pressable>
         </View>

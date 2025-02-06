@@ -15,7 +15,7 @@ import * as Animatable from "react-native-animatable";
 
 const HomeFoodDetail = ({route}) => {
     const {meal} = route.params;
-    console.log("HomeFoodDetail screen : ",meal);
+    // console.log("HomeFoodDetail screen : ",meal);
 
     const navigation = useNavigation();
       const mealName = meal.strMeal;

@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 const RecipeDetailScreen = ({ route }) => {
   const  meal  = route?.params[0];
+  console.log("recipe scree : ",meal.idMeal);
   
   const navigation = useNavigation();
   const mealName = meal.strMeal;
