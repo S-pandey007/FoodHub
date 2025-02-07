@@ -12,7 +12,7 @@ import React, { useEffect } from "react";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useState } from "react";
 import axios from "axios";
-import { Picker } from "@react-native-picker/picker";
+// import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import Feather from "@expo/vector-icons/Feather";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,44 +25,44 @@ const SearchScreen = () => {
   const [selectedFilter, setSelectedFilter] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
   const navigation = useNavigation();
-  useEffect(() => {
-    const fetchFilterOptions = async () => {
-      const categoruRes = await axios.get(
-        "https://www.themealdb.com/api/json/v1/1/list.php?c=list"
-      );
+  // useEffect(() => {
+  //   const fetchFilterOptions = async () => {
+  //     const categoruRes = await axios.get(
+  //       "https://www.themealdb.com/api/json/v1/1/list.php?c=list"
+  //     );
 
-      const areaRes = await axios.get(
-        "https://www.themealdb.com/api/json/v1/1/list.php?a=list"
-      );
+  //     const areaRes = await axios.get(
+  //       "https://www.themealdb.com/api/json/v1/1/list.php?a=list"
+  //     );
 
-      const ingredientRes = await axios.get(
-        "https://www.themealdb.com/api/json/v1/1/list.php?i=list"
-      );
+  //     const ingredientRes = await axios.get(
+  //       "https://www.themealdb.com/api/json/v1/1/list.php?i=list"
+  //     );
 
-      setCategories(categoruRes.data.meals);
-      setAreas(areaRes.data.meals);
-      setIngredients(ingredientRes.data.meals);
-    };
+  //     setCategories(categoruRes.data.meals);
+  //     setAreas(areaRes.data.meals);
+  //     setIngredients(ingredientRes.data.meals);
+  //   };
 
-    fetchFilterOptions();
-  }, []);
+  //   fetchFilterOptions();
+  // }, []);
   // console.log("category" , categories);
 
   // fetch meals based on selexted filter
-  const fetchMeals = async () => {
-    let url = "";
-    if (selectedFilter === "category") {
-      url = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${selectedValue}`;
-    } else if (selectedFilter === "area") {
-      url = `https://www.themealdb.com/api/json/v1/1/filter.php?a=${selectedValue}`;
-    } else if (selectedFilter === "ingredient") {
-      url = `https://www.themealdb.com/api/json/v1/1/filter.php?i=${selectedValue}`;
-    }
+  // const fetchMeals = async () => {
+  //   let url = "";
+  //   if (selectedFilter === "category") {
+  //     url = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${selectedValue}`;
+  //   } else if (selectedFilter === "area") {
+  //     url = `https://www.themealdb.com/api/json/v1/1/filter.php?a=${selectedValue}`;
+  //   } else if (selectedFilter === "ingredient") {
+  //     url = `https://www.themealdb.com/api/json/v1/1/filter.php?i=${selectedValue}`;
+  //   }
 
-    const res = await axios.get(url);
-    setMeals(res.data.meals);
-    // console.log("meals ",meals);
-  };
+  //   const res = await axios.get(url);
+  //   setMeals(res.data.meals);
+  //   // console.log("meals ",meals);
+  // };
 
   const [search, setSearch] = useState();
 
@@ -118,10 +118,13 @@ const SearchScreen = () => {
         >
           <Text style={styles.searchButtonText}>Search</Text>
         </Pressable>
+        <Feather 
+        onPress={()=>navigation.navigate("FilterScreen")}
+        style={{ left:8}} name="filter" size={24} color="#973838" />
       </View>
 
       {/* filter DropDowna  */}
-      <View style={styles.filterContainer}>
+      {/* <View style={styles.filterContainer}>
         <Picker
           selectedValue={selectedFilter}
           onValueChange={(itemValue) => setSelectedFilter(itemValue)}
@@ -159,15 +162,15 @@ const SearchScreen = () => {
                 value={item.strIngredient}
               />
             ))}
-        </Picker>
+        </Picker> */}
 
         {/* Search Button */}
-        <Pressable style={styles.searchButton} onPress={fetchMeals}>
+        {/* <Pressable style={styles.searchButton} onPress={fetchMeals}>
           <Text style={styles.searchButtonText}>Search</Text>
         </Pressable>
-      </View>
+      </View> */}
 
-      {selectedValue ? (
+      {/* {selectedValue ? (
         <FlatList
           data={meals}
           keyExtractor={(item) => item.idMeal}
@@ -183,9 +186,9 @@ const SearchScreen = () => {
                 source={{ uri: item.strMealThumb }}
               />
               <View style={styles.mealDetails}>
-                <Text style={styles.mealName}>{item.strMeal}</Text>
+                <Text style={styles.mealName}>{item.strMeal}</Text> */}
                 {/* <Text style={styles.mealCategory}>{item.strCategory}</Text> */}
-              </View>
+              {/* </View>
             </Pressable>
           )}
         />
@@ -203,9 +206,33 @@ const SearchScreen = () => {
             <Text>Search not found</Text>
           </View>
         </View>
-      )}
-
-      <Modal
+      )} */}
+        <View>
+              <FlatList
+                data={searchData}
+                keyExtractor={(item) => item.idMeal}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={() =>
+                      navigation.navigate("SearchDetail", {
+                        mealID: item.idMeal,
+                      })
+                    }
+                    style={styles.modalMealCard}
+                  >
+                    <Image
+                      style={styles.modalMealImage}
+                      source={{ uri: item.strMealThumb }}
+                    />
+                    <View style={styles.modalMealDetails}>
+                      <Text style={styles.modalMealName}>{item.strMeal}</Text>
+                      {/* <Text style={styles.mealCategory}>{item.strCategory}</Text> */}
+                    </View>
+                  </Pressable>
+                )}
+              />
+              </View>
+      {/* <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
@@ -243,9 +270,9 @@ const SearchScreen = () => {
                       source={{ uri: item.strMealThumb }}
                     />
                     <View style={styles.modalMealDetails}>
-                      <Text style={styles.modalMealName}>{item.strMeal}</Text>
+                      <Text style={styles.modalMealName}>{item.strMeal}</Text> */}
                       {/* <Text style={styles.mealCategory}>{item.strCategory}</Text> */}
-                    </View>
+                    {/* </View>
                   </Pressable>
                 )}
               />
@@ -253,7 +280,7 @@ const SearchScreen = () => {
             </View>
           </View>
         </TouchableWithoutFeedback>
-      </Modal>
+      </Modal> */}
     </View>
   );
 };
@@ -262,6 +289,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    top:10,
     padding: 20,
   },
   headerContainer: {
