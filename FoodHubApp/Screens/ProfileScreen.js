@@ -13,7 +13,8 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Alert
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -28,6 +29,8 @@ import { signOut } from "firebase/auth";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 // import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {ToastAndroid} from "react-native";
+
 const ProfileScreen = () => {
   const Profile_Option = [
     { id: "1", option: "Post" },
@@ -48,6 +51,9 @@ const ProfileScreen = () => {
   const [bio, setBio] = useState();
   const [city, setCity] = useState();
   const [age, setAge] = useState();
+
+  // change password
+  const [changePassword,setChangePasswordModal] = useState(false)
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -160,6 +166,34 @@ const ProfileScreen = () => {
     }
   }
 
+
+  // change user password 
+  const [newPassword , setNewPassword] = useState()
+  const [confirmPassword,setConfirmPassword] =useState()
+  const handleChangeNewPassword = async()=>{
+    if(newPassword!==confirmPassword){
+      Alert.alert("Error","Password not matched")
+      return
+    }
+    const user = auth.currentUser
+      if(!user){
+        Alert.alert("Error","No user found.")
+        return
+      }
+      try {
+        const userRef = doc(db,"users",user.uid)
+        await updateDoc(userRef,{
+          password:newPassword
+        })
+        console.log("Password Updated");
+        setConfirmPassword("")
+        setNewPassword("")
+        ToastAndroid.show("Password updated successfully!", ToastAndroid.SHORT);
+        
+      } catch (error) {
+        console.error("Something goes wrong ! Password not update ",error);
+      }
+  }
 
   return (
     <>
@@ -294,7 +328,9 @@ const ProfileScreen = () => {
                   <Text style={{ fontSize: 16 }}>Edit profile</Text>
                 </Pressable>
 
-                <Pressable style={{ flexDirection: "row", gap: 10 }}>
+                <Pressable
+                onPress={()=>setChangePasswordModal(true)}
+                style={{ flexDirection: "row", gap: 10 }}>
                   <MaterialIcons name="password" size={20} color="black" />
                   <Text style={{ fontSize: 16 }}>change password</Text>
                 </Pressable>
@@ -315,6 +351,7 @@ const ProfileScreen = () => {
             </View>
           </Modal>
 
+{/* edit profile  */}
           <Modal
             animationType="slide"
             transparent={true}
@@ -388,6 +425,56 @@ const ProfileScreen = () => {
                       <Text 
                       style={styles.saveButtonText}
                       >Save changess</Text>
+                    </TouchableOpacity>
+                  </ScrollView>
+                </KeyboardAvoidingView>
+            </View>
+          </Modal>
+
+          {/* change password  */}
+
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={changePassword}
+            onRequestClose={() => setChangePasswordModal(false)}
+          >
+              <View style={styles.passwordChangemodalOvarlay}>
+                <KeyboardAvoidingView
+                            behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.editmodalContainer}>
+                  <Pressable
+                    style={styles.passwordChangecloseButton}
+                    onPress={() => setChangePasswordModal(false)}
+                  >
+                    <Ionicons name="close" size={35} color="black" />
+                  </Pressable>
+
+                  <ScrollView>
+                    <Text style={styles.passwordChangemodalTitle}>Change password</Text>
+                    <View>
+                      <Text style={{padding:7,fontSize:18,fontWeight:'bold'}}>New Password</Text>
+                      <TextInput 
+                      value={newPassword}
+                      onChangeText={(text)=>setNewPassword(text)}
+                      style={styles.passwordChangeinput}
+                      placeholder="new password" />
+                    </View>
+
+                    <View>
+                      <Text style={{padding:7,fontSize:18,fontWeight:'bold'}}>Confirm Password</Text>
+                      <TextInput 
+                      value={confirmPassword}
+                      onChangeText={(text)=>setConfirmPassword(text)}
+                      style={styles.passwordChangeinput}
+                      placeholder="confirm password" />
+                    </View>
+
+                    <TouchableOpacity
+                    onPress={handleChangeNewPassword}
+                    style={styles.saveButton}>
+                      <Text 
+                      style={styles.saveButtonText}
+                      >Save changes</Text>
                     </TouchableOpacity>
                   </ScrollView>
                 </KeyboardAvoidingView>
@@ -581,7 +668,7 @@ const styles = StyleSheet.create({
     width:100,
     height:100,
     borderRadius:50,
-    // marginVertical:10
+    
   },
 
   input:{
@@ -600,7 +687,58 @@ const styles = StyleSheet.create({
   saveButtonText:{
     color:'white',
     fontSize:16
-  }
+  },
+
+
+//  change password modal 
+
+passwordChangemodalOvarlay: {
+  flex: 1,
+  backgroundColor: "rgba(0, 0, 0, 0.5)",
+  justifyContent: "flex-end",
+},
+
+passwordChangemodalContainer: {
+  width: "100%",
+  height: 400,
+  backgroundColor: "#f7efef",
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  padding: 15,
+  alignContent: "center",
+  // alignItems: "center",
+},
+passwordChangecloseButton: {
+  // position: "absolute",
+  top: 10,
+  justifyContent: "flex-end",
+  paddingBottom: 10,
+},
+passwordChangemodalTitle:{
+  fontSize:18,
+  fontWeight:"800",
+  textAlign:'center',
+  marginBottom:10
+},
+
+
+passwordChangeinput:{
+  borderBottomWidth:1,
+  marginBottom:20,
+  paddingVertical:5
+},
+
+saveButton:{
+  backgroundColor:'blue',
+  padding:10,
+  borderRadius:5,
+  alignItems:'center',
+  marginTop:10
+},
+saveButtonText:{
+  color:'white',
+  fontSize:16
+},
 });
 
 export default ProfileScreen;
