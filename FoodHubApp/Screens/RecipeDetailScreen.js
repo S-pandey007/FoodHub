@@ -13,9 +13,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 const RecipeDetailScreen = ({ route }) => {
-  const  meal  = route?.params[0];
-  console.log("recipe scree : ",meal.idMeal);
-  
+  const meal = route?.params[0];
+  console.log("recipe scree : ", meal.idMeal);
+
   const navigation = useNavigation();
   const mealName = meal.strMeal;
   const category = meal.strCategory;
@@ -23,23 +23,32 @@ const RecipeDetailScreen = ({ route }) => {
   const process = meal.strInstructions;
 
   const thumbnail = meal.strMealThumb;
-  
+
   const ingredients = [];
   for (let i = 1; i <= 20; i++) {
-    const ingredient = meal[`strIngredient${i}`] ||"";
+    const ingredient = meal[`strIngredient${i}`] || "";
     if (ingredient && ingredient.trim() !== "") {
       ingredients.push(ingredient);
     }
   }
-  
+
   // console.log("Detail meal screen : ",meal);
   // console.log(meal.strIngredient1||"");
   // console.log("mealName : ",mealName);
-  
 
+  // logic behind like / ulike /saved
+  const [isLiked, setIsLiked] = React.useState(false);
+  const [isUnliked, setIsUnliked] = React.useState(false);
+  const [isSaved, setIsSaved] = React.useState(false);
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+    if (isUnliked) setIsUnliked(false);
+  };
 
-
-
+  const handleUnlike = () => {
+    setIsUnliked(true);
+    if (isLiked) setIsLiked(false);
+  };
 
   return (
     <>
@@ -57,7 +66,7 @@ const RecipeDetailScreen = ({ route }) => {
           duration={1200}
           style={styles.imageContainer}
         >
-          <Image style={styles.thumbnailImage} source={{uri:thumbnail}} />
+          <Image style={styles.thumbnailImage} source={{ uri: thumbnail }} />
           <LinearGradient
             colors={["transparent", "rgba(0, 0, 0, 0.6)"]}
             style={styles.overlay}
@@ -79,21 +88,40 @@ const RecipeDetailScreen = ({ route }) => {
           style={styles.actionsContainer}
         >
           <View style={styles.actionsLeft}>
-            <AntDesign
-              name="like2"
-              size={24}
-              color="black"
-              style={styles.iconSpacing}
-            />
-            <AntDesign
-              name="dislike2"
-              size={24}
-              color="black"
-              style={[styles.iconSpacing, { top: 4, paddingLeft: 10 }]}
-            />
+            <Pressable onPress={handleLike}>
+              {isLiked ? (
+                <AntDesign name="like1" size={27} color="black" />
+              ) : (
+                <AntDesign name="like2" size={27} color="black" />
+              )}
+            </Pressable>
+            <Pressable onPress={handleUnlike}>
+              {isUnliked ? (
+                <AntDesign
+                  style={{ top: 8 }}
+                  name="dislike1"
+                  size={27}
+                  color="black"
+                />
+              ) : (
+                <AntDesign
+                  style={{ top: 8 }}
+                  name="dislike2"
+                  size={27}
+                  color="black"
+                />
+              )}
+            </Pressable>
           </View>
           <View style={styles.actionsRight}>
-            <AntDesign name="hearto" size={24} color="black" />
+            <Pressable onPress={() => setIsSaved(!isSaved)}>
+              {isSaved ? (
+                <AntDesign name="heart" size={27} color="black" />
+              ) : (
+                <AntDesign name="hearto" size={27} color="black" />
+              )}
+            </Pressable>
+
             <AntDesign name="sharealt" size={24} color="black" />
           </View>
         </Animatable.View>
@@ -119,17 +147,14 @@ const RecipeDetailScreen = ({ route }) => {
           style={styles.processContainer}
         >
           <Text style={styles.sectionTitle}>Cooking Process</Text>
-          {
-            process.split(/STEP \d+/) 
-            .filter((step) => step.trim()) 
+          {process
+            .split(/STEP \d+/)
+            .filter((step) => step.trim())
             .map((step, index) => (
               <View style={styles.stepContainer} key={index}>
-                
                 <Text style={styles.stepNumber}>Step {index + 1}</Text>
-                
-                <Text style={styles.stepText}>
-                  {step.replace(/\.+$/, "") }
-                </Text>
+
+                <Text style={styles.stepText}>{step.replace(/\.+$/, "")}</Text>
               </View>
             ))}
         </Animatable.View>
@@ -218,6 +243,7 @@ const styles = StyleSheet.create({
   },
   actionsLeft: {
     flexDirection: "row",
+    gap: 10,
   },
   actionsRight: {
     flexDirection: "row",

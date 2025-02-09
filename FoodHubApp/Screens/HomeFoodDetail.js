@@ -32,6 +32,21 @@ const HomeFoodDetail = ({route}) => {
           ingredients.push(ingredient);
         }
       }
+
+
+      // logic behind like / ulike /saved
+      const [isLiked, setIsLiked] = React.useState(false);
+      const [isUnliked , setIsUnliked] = React.useState(false)
+      const [isSaved , setIsSaved] = React.useState(false)
+      const handleLike=()=>{
+        setIsLiked(!isLiked);
+        if(isUnliked) setIsUnliked(false)
+      }
+
+      const handleUnlike = ()=>{
+        setIsUnliked(true)
+        if(isLiked) setIsLiked(false)
+      }
     
   return (
     <>
@@ -71,21 +86,24 @@ const HomeFoodDetail = ({route}) => {
               style={styles.actionsContainer}
             >
               <View style={styles.actionsLeft}>
-                <AntDesign
-                  name="like2"
-                  size={24}
-                  color="black"
-                  style={styles.iconSpacing}
-                />
-                <AntDesign
-                  name="dislike2"
-                  size={24}
-                  color="black"
-                  style={[styles.iconSpacing, { top: 4, paddingLeft: 10 }]}
-                />
+                <Pressable onPress={handleLike}>
+                  {
+                    isLiked ? (<AntDesign name="like1" size={27} color="black" />):(<AntDesign name="like2" size={27} color="black" />)
+                  }
+                </Pressable>
+                <Pressable onPress={handleUnlike}>
+                  {
+                    isUnliked ? (<AntDesign style={{top:8}} name="dislike1" size={27} color="black" />):(<AntDesign style={{top:8}} name="dislike2" size={27} color="black" />)
+                  }
+                </Pressable>
               </View>
               <View style={styles.actionsRight}>
-                <AntDesign name="hearto" size={24} color="black" />
+                <Pressable onPress={()=>setIsSaved(!isSaved)}>
+                  {
+                    isSaved?(<AntDesign name="heart" size={27} color="black" />):(<AntDesign name="hearto" size={27} color="black" />)
+                  }
+                </Pressable>
+                
                 <AntDesign name="sharealt" size={24} color="black" />
               </View>
             </Animatable.View>
@@ -210,6 +228,10 @@ const styles = StyleSheet.create({
     },
     actionsLeft: {
       flexDirection: "row",
+      gap:10,
+      justifyContent:'center',
+      alignItems:'center',
+      alignContent:'center'
     },
     actionsRight: {
       flexDirection: "row",

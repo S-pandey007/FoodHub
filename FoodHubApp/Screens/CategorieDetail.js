@@ -38,25 +38,26 @@ const CategorieDetail = ({ route }) => {
   }, [categoriesName]);
   // console.log("THis is data of specific category : ", meals);
 
-  const sendMeals_Data_To_DetailScreen = async(idMeal)=>{
+  const sendMeals_Data_To_DetailScreen = async (idMeal) => {
     // console.log(" this food id on category screen sendmeal data to detailscreen : " ,idMeal);
     try {
-      const Data = await axios.get(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${idMeal}`)
+      const Data = await axios.get(
+        `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${idMeal}`
+      );
       const JSONData = Data.data.meals;
       // console.log("this data of id based meal ",JSONData);
-      
-      navigation.navigate("Detail", JSONData);
-      
-    } catch (error) {
-      console.log(`Error to fetch data ${idMeal} data : `,error);
-    }
-    
-  }
 
-  
+      navigation.navigate("Detail", JSONData);
+    } catch (error) {
+      console.log(`Error to fetch data ${idMeal} data : `, error);
+    }
+  };
+
+  // saved post logic
+  const [isSaved, setIsSaved] = React.useState(false);
 
   return (
-    <>
+    <View style={{flex:1,backgroundColor:'white'}}>
       <View style={styles.headerContainer}>
         <AntDesign
           onPress={() => navigation.goBack()}
@@ -65,7 +66,7 @@ const CategorieDetail = ({ route }) => {
           size={24}
           color="black"
         />
-        <Text style={styles.headText}>Food Categorie</Text>
+        <Text style={styles.headText}>{categoriesName} category list</Text>
       </View>
       <View style={{ paddingBottom: 60 }}>
         <FlatList
@@ -83,7 +84,7 @@ const CategorieDetail = ({ route }) => {
               {/* first card  */}
               <Pressable
                 // onPress={() => navigation.navigate("Detail",{mealID:item.idMeal})}
-                onPress={()=>sendMeals_Data_To_DetailScreen(item.idMeal)}
+                onPress={() => sendMeals_Data_To_DetailScreen(item.idMeal)}
                 style={styles.card}
               >
                 <Animatable.View animation="fadeInLeft" duration={1200}>
@@ -93,12 +94,19 @@ const CategorieDetail = ({ route }) => {
                   />
                   <View style={styles.cardContent}>
                     <Text style={styles.cardTitle}>{item.strMeal}</Text>
-                    <Text style={styles.cardSubtitle}>Categorie</Text>
+                    <Text style={styles.cardSubtitle}>{item.strArea}</Text>
                     {/* <View style={styles.cardFooter}> */}
-                      {/* <Text style={styles.cardPrice}>Rs.20</Text> */}
-                      <Pressable style={styles.heartIcon}>
-                        <AntDesign name="hearto" size={20} color="#ff6f61" />
-                      </Pressable>
+                    {/* <Text style={styles.cardPrice}>Rs.20</Text> */}
+                    {/* <Pressable
+                      style={styles.heartIcon}
+                      onPress={() => setIsSaved(!isSaved)}
+                    >
+                      {isSaved ? (
+                        <AntDesign name="heart" size={27} color="black" />
+                      ) : (
+                        <AntDesign name="hearto" size={27} color="black" />
+                      )}
+                    </Pressable> */}
                     {/* </View> */}
                   </View>
                 </Animatable.View>
@@ -107,7 +115,7 @@ const CategorieDetail = ({ route }) => {
           )}
         />
       </View>
-    </>
+    </View>
   );
 };
 
@@ -118,7 +126,7 @@ const styles = StyleSheet.create({
     gap: 80,
     alignItems: "center",
     backgroundColor: "#fff",
-    marginTop: 20,
+    marginTop: 30,
     // borderBottomWidth:1
   },
   headText: {
@@ -134,39 +142,39 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
-  cardWrapper:{
-    flex:1,
-    margin:10,
-    maxWidth:"50%",
+  cardWrapper: {
+    flex: 1,
+    margin: 10,
+    maxWidth: "50%",
   },
-  card:{
-    backgroundColor:'#fff',
-    borderRadius:10,
-    overflow:'hidden',
-    shadowColor:'#000',
-    shadowOpacity:0.1,
-    shadowRadius:10,
-    elevation:5
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
-  cardImage:{
-    width:'100%',
-    height:120,
+  cardImage: {
+    width: "100%",
+    height: 120,
   },
-  cardContent:{
-    padding:10,
+  cardContent: {
+    padding: 10,
   },
-  cardTitle:{
-    fontSize:15,
-    fontWeight:'bold',
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
   },
-  cardSubtitle:{
-    fontSize:13,
-    color:'#666',
-    marginVertical:5
+  cardSubtitle: {
+    fontSize: 13,
+    color: "#666",
+    marginVertical: 5,
   },
-  heartIcon:{
-    padding:5
-  }
+  heartIcon: {
+    padding: 5,
+  },
 });
 
 export default CategorieDetail;
