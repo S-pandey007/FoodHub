@@ -1,5 +1,6 @@
 import{createSlice} from "@reduxjs/toolkit";
-import { act } from "react";
+import { auth, db } from "../firebase";
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 
 
 // initialState
@@ -27,7 +28,7 @@ const postSlice = createSlice({
 
         unlikePost:(state,action)=>{
           const recipeId= action.payload;
-          if(state.unlikedPosts.includes(recipeId)){
+          if(!state.unlikedPosts.includes(recipeId)){
             state.unlikedPosts.push(recipeId);
             console.log("Unliked recipe added in unlikedArray: ",recipeId)
             console.log("Current users Unliked array : ",state.unlikedPosts);
@@ -48,11 +49,16 @@ const postSlice = createSlice({
 
         removeSavedPost:(state,action)=>{
             state.savedPosts = state.savedPosts.filter(id=> id !==action.payload)
+            console.log("saved recipe removed : ",action.payload);
+            console.log("current saved array : ",state.savedPosts);
+            
         },
 
         syncWithDatabase:(state)=>{
             // This is a placeholder for a function that would sync the state with the database
             console.log("Syncing with database",state);
+
+            
         }
     }
 })

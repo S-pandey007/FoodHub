@@ -7,6 +7,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Animatable from "react-native-animatable";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
+import { auth, db } from "../firebase";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { useDispatch, useSelector } from "react-redux";
+import { syncWithDatabase } from "../redux/postSlice";
+
 const HomeScreen = () => {
   const [meals, setMeals] = useState([]);
   const [category, setCategory] = useState([]);
@@ -44,6 +49,38 @@ const HomeScreen = () => {
     FetchCategory();
   }, []);
   // console.log(meals);
+
+  // data(like,dislike,saved) move redux store to firestore
+  const dispatch = useDispatch();
+  const { likedPosts, unlikedPosts, savedPosts } = useSelector(
+    (state) => state.posts
+  );
+
+  useEffect(() => {
+    const user = auth.currentUser;
+
+    if (user) {
+      try {
+        const userInteractionRef = doc(
+          db,
+          "users",
+          user.uid,
+          "interactions",
+          "current"
+        );
+        setDoc(userInteractionRef, {
+          liked: likedPosts,
+          dislike: unlikedPosts,
+          saved: savedPosts,
+        });
+
+        console.log("data synced to firestore successfully");
+        dispatch(syncWithDatabase())
+      } catch (error) {
+        console.error("Error syncing data with Firestore:", error);
+      }
+    }
+  }, [likedPosts,unlikedPosts,savedPosts]);
 
   return (
     <>
@@ -102,7 +139,10 @@ const HomeScreen = () => {
         {/* </Animatable.View> } */}
 
         <View style={styles.searchContainer}>
-          <Pressable onPress={()=>navigation.navigate("Search")} style={styles.fab}>
+          <Pressable
+            onPress={() => navigation.navigate("Search")}
+            style={styles.fab}
+          >
             <Feather name="search" size={24} color="#fff" />
           </Pressable>
         </View>

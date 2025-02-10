@@ -19,7 +19,7 @@ import {
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
-import { useState } from "react";
+import { useState} from "react";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -30,6 +30,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 // import { doc, getDoc, updateDoc } from "firebase/firestore";
 import {ToastAndroid} from "react-native";
+import { useDispatch } from "react-redux";
+import{likePost, unlikePost, savePost, removeSavedPost} from '../redux/postSlice'
 
 const ProfileScreen = () => {
   const Profile_Option = [
@@ -195,6 +197,32 @@ const ProfileScreen = () => {
       }
   }
 
+
+  // option logic 
+ useEffect(()=>{
+  const fetchUserInteractions = async()=>{
+    try {
+      const user = auth.currentUser;
+      if(user){
+        const userInteractionRef = doc(db,"users",user.uid,"interactions","current")
+        const docSnap = await getDoc(userInteractionRef)
+        
+        if(docSnap.exists()){
+          const {liked,unliked,saved} = docSnap.data()
+          console.log("liked : ",liked);
+          console.log("Unliked : ",unliked);
+          console.log("saved : ",saved);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user interaction : ",error);
+      
+    }
+  }
+  fetchUserInteractions()
+ },[])
+  const [postsOptionModal,setpostsOptionModal] = useState(false)
+
   return (
     <>
       {userData ? (
@@ -263,23 +291,11 @@ const ProfileScreen = () => {
 
           {/* Options */}
           <View style={styles.optionsContainer}>
-            <FlatList
-              data={Profile_Option}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Animatable.View
-                  animation="fadeInDown"
-                  direction="alternate"
-                  duration={1200}
-                >
-                  <Pressable style={styles.optionButton}>
-                    <Text style={styles.optionText}>{item.option}</Text>
-                  </Pressable>
-                </Animatable.View>
-              )}
-            />
+            <View style={styles.optionInsideContainer}>
+              <Pressable onPress={()=>setpostsOptionModal(true)} style={styles.postsOption}><Text  style={styles.postsOptionText}>Posts</Text></Pressable>
+              <Pressable style={styles.likesOption}><Text style={styles.likesOptionText}>Likes</Text></Pressable>
+              <Pressable style={styles.savedOption}><Text style={styles.savedOptionText}>Saved</Text></Pressable>
+            </View>
           </View>
 
           {/* <Modal
@@ -480,7 +496,22 @@ const ProfileScreen = () => {
                 </KeyboardAvoidingView>
             </View>
           </Modal>
-        </View>
+
+
+          // Postsoption modal 
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={postsOptionModal}
+            onRequestClose={() => setpostsOptionModal(false)}
+          >
+          <View>
+
+          </View>
+          </Modal>
+         </View>
+
+
       ) : (
         <View
           style={{
@@ -591,9 +622,49 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   optionsContainer: {
-    backgroundColor: "#FFF",
-    shadowRadius: 4,
+    flex:1
   },
+  optionInsideContainer:{
+    flexDirection:'row',
+    justifyContent:"space-around"
+  },
+
+  postsOption:{
+    backgroundColor:'#973838',
+    borderRadius:10
+  },
+  postsOptionText:{
+    color:'white',
+    paddingHorizontal:20,
+    paddingVertical:7,
+    fontSize:17,
+    fontWeight:'bold'
+  },
+
+  likesOption:{
+    backgroundColor:'#973838',
+    borderRadius:10
+  },
+  likesOptionText:{
+    color:'white',
+    paddingHorizontal:20,
+    paddingVertical:7,
+    fontSize:17,
+    fontWeight:'bold'
+  },
+
+  savedOption:{
+    backgroundColor:'#973838',
+    borderRadius:10
+  },
+  savedOptionText:{
+    color:'white',
+    paddingHorizontal:20,
+    paddingVertical:7,
+    fontSize:17,
+    fontWeight:'bold'
+  },
+
   optionButton: {
     paddingVertical: 10,
     paddingHorizontal: 20,

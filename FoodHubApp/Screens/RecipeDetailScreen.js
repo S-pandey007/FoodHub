@@ -12,9 +12,14 @@ import { AntDesign } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
+
+import {useDispatch,useSelector} from 'react-redux'
+import{likePost, unlikePost, savePost, removeSavedPost} from '../redux/postSlice'
+
 const RecipeDetailScreen = ({ route }) => {
   const meal = route?.params[0];
-  console.log("recipe scree : ", meal.idMeal);
+  const recipeId = meal.idMeal;
+  console.log("recipe scree : ", recipeId);
 
   const navigation = useNavigation();
   const mealName = meal.strMeal;
@@ -35,20 +40,38 @@ const RecipeDetailScreen = ({ route }) => {
   // console.log("Detail meal screen : ",meal);
   // console.log(meal.strIngredient1||"");
   // console.log("mealName : ",mealName);
+// logic behind like / ulike /saved
+const dispatch = useDispatch()
+const {likedPosts,savedPosts}= useSelector((state)=>state.posts)
 
-  // logic behind like / ulike /saved
-  const [isLiked, setIsLiked] = React.useState(false);
-  const [isUnliked, setIsUnliked] = React.useState(false);
-  const [isSaved, setIsSaved] = React.useState(false);
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    if (isUnliked) setIsUnliked(false);
-  };
+const isSaved = savedPosts.includes(recipeId);
+const isLiked =likedPosts.includes(recipeId);
+// const isUnliked = !likedPosts.includes(recipeId);
+// const isUnliked = !isLiked && likedPosts.length > 0;
+const isUnliked = likedPosts.includes(recipeId) === false && likedPosts.length > 0;
 
-  const handleUnlike = () => {
-    setIsUnliked(true);
-    if (isLiked) setIsLiked(false);
-  };
+
+// const [isUnliked , setIsUnliked] = React.useState(false)
+// const [isSaved , setIsSaved] = React.useState(false)
+// const isUnliked = !likedPosts.includes(recipeId) && likedPosts.length > 0;
+
+const handleLike=()=>{
+  // setIsLiked(!isLiked);
+  // if(isUnliked) setIsUnliked(false)
+  // dispatch()
+  
+   if (!isLiked) dispatch(likePost(recipeId));
+}
+
+const handleUnlike = ()=>{
+  // setIsUnliked(true)
+  // if(isLiked) setIsLiked(false)
+  if (isLiked) dispatch(unlikePost(recipeId));
+}
+
+const handleSave = () => {
+  isSaved ? dispatch(removeSavedPost(recipeId)) : dispatch(savePost(recipeId));
+};
 
   return (
     <>
@@ -82,49 +105,34 @@ const RecipeDetailScreen = ({ route }) => {
         </Animatable.View>
 
         {/* Like/Dislike & Heart Icons */}
-        <Animatable.View
-          animation="fadeInDown"
-          duration={1200}
-          style={styles.actionsContainer}
-        >
-          <View style={styles.actionsLeft}>
-            <Pressable onPress={handleLike}>
-              {isLiked ? (
-                <AntDesign name="like1" size={27} color="black" />
-              ) : (
-                <AntDesign name="like2" size={27} color="black" />
-              )}
-            </Pressable>
-            <Pressable onPress={handleUnlike}>
-              {isUnliked ? (
-                <AntDesign
-                  style={{ top: 8 }}
-                  name="dislike1"
-                  size={27}
-                  color="black"
-                />
-              ) : (
-                <AntDesign
-                  style={{ top: 8 }}
-                  name="dislike2"
-                  size={27}
-                  color="black"
-                />
-              )}
-            </Pressable>
-          </View>
-          <View style={styles.actionsRight}>
-            <Pressable onPress={() => setIsSaved(!isSaved)}>
-              {isSaved ? (
-                <AntDesign name="heart" size={27} color="black" />
-              ) : (
-                <AntDesign name="hearto" size={27} color="black" />
-              )}
-            </Pressable>
-
-            <AntDesign name="sharealt" size={24} color="black" />
-          </View>
-        </Animatable.View>
+                    <Animatable.View
+                      animation="fadeInDown"
+                      duration={1200}
+                      style={styles.actionsContainer}
+                    >
+                      <View style={styles.actionsLeft}>
+                        <Pressable onPress={handleLike}>
+                          {
+                            likedPosts.includes(recipeId) ? (<AntDesign name="like1" size={27} color="black" />):(<AntDesign name="like2" size={27} color="black" />)
+                          }
+                        </Pressable>
+                        <Pressable onPress={handleUnlike}>
+                          {
+                            isLiked ? (<AntDesign style={{top:8}} name="dislike2" size={27} color="black" />):(<AntDesign style={{top:8}} name="dislike1" size={27} color="black" />)
+                          }
+                        </Pressable>
+                      </View>
+                      <View style={styles.actionsRight}>
+                        <Pressable onPress={handleSave}>
+                          {
+                            savedPosts.includes(recipeId)?(<AntDesign name="heart" size={27} color="black" />):(<AntDesign name="hearto" size={27} color="black" />)
+                          }
+                        </Pressable>
+                        
+                        <AntDesign name="sharealt" size={24} color="black" />
+                      </View>
+                    </Animatable.View>
+        
 
         {/* Title and YouTube Video */}
         <Animatable.View
