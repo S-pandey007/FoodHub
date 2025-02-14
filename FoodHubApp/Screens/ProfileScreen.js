@@ -14,25 +14,33 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert
+  Dimensions,
+  Alert,
+  RefreshControl
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
-import { useState} from "react";
+import { useState ,useCallback} from "react";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc ,onSnapshot} from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 // import { doc, getDoc, updateDoc } from "firebase/firestore";
-import {ToastAndroid} from "react-native";
+import { ToastAndroid } from "react-native";
 import { useDispatch } from "react-redux";
-import{likePost, unlikePost, savePost, removeSavedPost} from '../redux/postSlice'
+import {
+  likePost,
+  unlikePost,
+  savePost,
+  removeSavedPost,
+} from "../redux/postSlice";
 import axios from "axios";
+import Navigation from "../Navigation";
 const ProfileScreen = () => {
   const Profile_Option = [
     { id: "1", option: "Post" },
@@ -49,13 +57,13 @@ const ProfileScreen = () => {
   // edit userinformation
 
   const [profileImage, setProfileImage] = useState();
-  const [name,setName] = useState()
+  const [name, setName] = useState();
   const [bio, setBio] = useState();
   const [city, setCity] = useState();
   const [age, setAge] = useState();
 
   // change password
-  const [changePassword,setChangePasswordModal] = useState(false)
+  const [changePassword, setChangePasswordModal] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -66,11 +74,11 @@ const ProfileScreen = () => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             setUserData(docSnap.data());
-            setName(userData.name)
-            setAge(userData.age)
-            setBio(userData.bio)
-            setCity(userData.city)
-            setProfileImage(userData.profileImageURL)
+            setName(userData.name);
+            setAge(userData.age);
+            setBio(userData.bio);
+            setCity(userData.city);
+            setProfileImage(userData.profileImageURL);
             // console.log("user data : ", userData);
           }
         }
@@ -80,9 +88,8 @@ const ProfileScreen = () => {
     };
     fetchUserData();
   }, []);
-// console.log("name",name);
-// console.log("profile image",profileImage);
-
+  // console.log("name",name);
+  // console.log("profile image",profileImage);
 
   //profile image picker
   const handleImagePicker = async () => {
@@ -94,7 +101,7 @@ const ProfileScreen = () => {
     });
 
     if (!result.canceled) {
-      uploadCloud(result.assets[0].uri)
+      uploadCloud(result.assets[0].uri);
     }
   };
 
@@ -104,139 +111,149 @@ const ProfileScreen = () => {
     navigation.navigate("Welcome");
   };
 
-  // cloudinary 
+  // cloudinary
   const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/do9zifunn/upload";
   const UPLOAD_PRESET = "auth_app";
 
   // fetched image from local screen to store in cloud
-  const uploadCloud = async (imageLocalPath)=>{
+  const uploadCloud = async (imageLocalPath) => {
     const ImageData = new FormData();
-    ImageData.append("file",{
-      uri:imageLocalPath,
-      type:"image/jpeg",
-      name:`${name}profile.jpeg`
-    })
+    ImageData.append("file", {
+      uri: imageLocalPath,
+      type: "image/jpeg",
+      name: `${name}profile.jpeg`,
+    });
     ImageData.append("upload_preset", UPLOAD_PRESET);
     ImageData.append("cloud_name", "do9zifunn");
 
     try {
-      const response = await fetch(CLOUDINARY_URL,{
-        method:"POST",
-        body:ImageData,
-      })
+      const response = await fetch(CLOUDINARY_URL, {
+        method: "POST",
+        body: ImageData,
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
-      if(result.secure_url){
+      if (result.secure_url) {
         setProfileImage(result.secure_url);
-        console.log("uploaded image URL : ",result.secure_url);
+        console.log("uploaded image URL : ", result.secure_url);
       }
     } catch (error) {
-      console.error("Error uploadign image in cloudinary",error);
+      console.error("Error uploadign image in cloudinary", error);
     }
-  }
+  };
 
   // update user information
-  const handleSaveChanges = async()=>{
-    console.log("name : ",name);
-    console.log("city : ",city);
-    console.log("profile image cloud URL : ",profileImage);
-    console.log("bio : ",bio);
+  const handleSaveChanges = async () => {
+    console.log("name : ", name);
+    console.log("city : ", city);
+    console.log("profile image cloud URL : ", profileImage);
+    console.log("bio : ", bio);
     try {
       const user = auth.currentUser;
-      if(user){
-        const userRef = doc(db,"users",user.uid)
-        await updateDoc(userRef,{
-          name:name,
-          bio:bio,
-          city:city,
-          age:age,
-          profileImageURL:profileImage
-        })
+      if (user) {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, {
+          name: name,
+          bio: bio,
+          city: city,
+          age: age,
+          profileImageURL: profileImage,
+        });
         console.log("user information updated updated");
-        setEditModalVisible(false)
-        setName("")
-        setAge("")
-        setBio("")
-        setCity("")
-        setProfileImage('')
+        setEditModalVisible(false);
+        setName("");
+        setAge("");
+        setBio("");
+        setCity("");
+        setProfileImage("");
       }
       // console.log("I think user not exist check this log")
     } catch (error) {
-      console.error("Update information failed : ",error);
-      
+      console.error("Update information failed : ", error);
     }
-  }
+  };
 
-
-  // change user password 
-  const [newPassword , setNewPassword] = useState()
-  const [confirmPassword,setConfirmPassword] =useState()
-  const handleChangeNewPassword = async()=>{
-    if(newPassword!==confirmPassword){
-      Alert.alert("Error","Password not matched")
-      return
+  // change user password
+  const [newPassword, setNewPassword] = useState();
+  const [confirmPassword, setConfirmPassword] = useState();
+  const handleChangeNewPassword = async () => {
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "Password not matched");
+      return;
     }
-    const user = auth.currentUser
-      if(!user){
-        Alert.alert("Error","No user found.")
-        return
-      }
-      try {
-        const userRef = doc(db,"users",user.uid)
-        await updateDoc(userRef,{
-          password:newPassword
-        })
-        console.log("Password Updated");
-        setConfirmPassword("")
-        setNewPassword("")
-        ToastAndroid.show("Password updated successfully!", ToastAndroid.SHORT);
-        
-      } catch (error) {
-        console.error("Something goes wrong ! Password not update ",error);
-      }
-  }
-
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Error", "No user found.");
+      return;
+    }
+    try {
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        password: newPassword,
+      });
+      console.log("Password Updated");
+      setConfirmPassword("");
+      setNewPassword("");
+      ToastAndroid.show("Password updated successfully!", ToastAndroid.SHORT);
+    } catch (error) {
+      console.error("Something goes wrong ! Password not update ", error);
+    }
+  };
 
   // option logic
-  const [userInteractionData , setUserInteractionData] = useState({
-    like:[],
-    dislike:[],
-    saved:[]
-  }) 
-  
-  
-  
- useEffect(()=>{
-  const fetchUserInteractions = async()=>{
-    try {
-      const user = auth.currentUser;
-      if(user){
-        const userInteractionRef = doc(db,"users",user.uid,"interactions","current")
-        const docSnap = await getDoc(userInteractionRef)
-        
-        if(docSnap.exists()){
-          const {liked,dislike,saved} = docSnap.data()
-          // console.log("liked : ",liked);
-          // console.log("Unliked : ",dislike);
-          // console.log("saved : ",saved);
-          setUserInteractionData({
-            like:liked,
-            dislike:dislike,
-            saved:saved
-            })
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching user interaction : ",error);
-      
-    }
-  }
-  fetchUserInteractions()
- },[])
+  const [userInteractionData, setUserInteractionData] = useState({
+    like: [],
+    dislike: [],
+    saved: [],
+  });
 
-// write logic to show liked recipes
-console.log(userInteractionData.like);
+  useEffect(() => {
+    const fetchUserInteractions = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const userInteractionRef = doc(
+            db,
+            "users",
+            user.uid,
+            "interactions",
+            "current"
+          );
+
+          // const docSnap = await getDoc(userInteractionRef);
+          // if (docSnap.exists()) {
+          //   const { liked, dislike, saved } = docSnap.data();
+          //   setUserInteractionData({
+          //     like: liked,
+          //     dislike: dislike,
+          //     saved: saved,
+          //   });
+          // }
+
+          const unsubscribe = onSnapshot(userInteractionRef, (docSnap) => {
+            if (docSnap.exists()) {
+              const { liked, dislike, saved } = docSnap.data();
+              setUserInteractionData({
+                like: liked,
+                dislike: dislike,
+                saved: saved,
+              });
+            }
+          });
+        
+          return () => unsubscribe();
+        }
+      } catch (error) {
+        console.error("Error fetching user interaction : ", error);
+      }
+    };    
+    fetchUserInteractions();
+  }, []);
+
+  // write logic to show liked recipes
+  // console.log(userInteractionData.like);
+  // console.log(userInteractionData.saved);
 
   const fetchMeals = async (id) => {
     try {
@@ -247,37 +264,83 @@ console.log(userInteractionData.like);
 
       // setMeals(JSONdata);
       // console.log("meal : ",JSONdata);
-      console.log("meal image : ",JSONdata.strMealThumb);
-      const result = JSONdata.strMealThumb
-      return result
+      // console.log("meal image : ", JSONdata.strMealThumb);
+      const result = { link: JSONdata.strMealThumb, id: id };
+      return result;
     } catch (error) {
       console.error("Data not fetch : ", error);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await savedImages();
+    await likeImages(); // Re-fetch images
+    setRefreshing(false);
+  }, []);
+
+  const savedImages = async () => {
+    try {
+      const result = await Promise.all(
+        userInteractionData.saved.map((id) => fetchMeals(id))
+      );
+      // console.log("all fetched images ", result);
+      return result;
+    } catch (error) {
+      console.error("error fetching meals : ", error);
+    }
+  };
+
+  
+  const likeImages = async () => {
+    try {
+      const result = await Promise.all(
+        userInteractionData.like.map((id) => fetchMeals(id))
+      );
+      // console.log("all fetched images : ", result);
+      return result;
+    } catch (error) {
+      console.error("error fetching meals : ", error);
+    }
+  };
+  const [refreshing, setRefreshing] = useState(false);
+  const [likeImagesLink, setLikeImagesLink] = useState([]);
+  const [savedImageLink, setSavedImageLink] = useState([]);
+  
+  useEffect(() => {
+    
+    const likeImagesArr = async () => {
+      await likeImages().then((images) => {
+        // console.log("like imges : ", images);
+        setLikeImagesLink(images);
+      });
+    };
+
+    const savedImagesArr = async () => {
+      await savedImages().then((images) => {
+        // console.log("like imges : ", images);
+        setSavedImageLink(images);
+      });
+    };
+    
+    savedImagesArr();
+    likeImagesArr();
+   
+  }, [userInteractionData]);
+
   
 
- const likeImages = async()=>{
-  try {
-    const result = await Promise.all(userInteractionData.like.map(id=>fetchMeals(id)))
-    console.log("all fetched images ",result);
-    return result
-  } catch (error) {
-    console.error("error fetching meals : ",error)
+  
+
+  //  console.log("linkImageink" , likeImagesLink);
+
+  const [selectedOption, setSelectedOption] = useState("likes");
+  // const windowHeight = Dimensions.get('window').height;
+
+  const seeLikedFood =(id)=>{
+    // console.log(id);
+    navigation.navigate("SearchDetail",{mealID:id})
   }
- }
-
- const [likeImagesLink , setLikeImagesLink] = useState([])
- useEffect(()=>{
-  likeImages().then(images=>{
-    console.log("like imges : ",images)
-    setLikeImagesLink(images)
-  })
- },[])
-
-//  console.log("linkImageink" , likeImagesLink);
- 
-  const [postsOptionModal,setpostsOptionModal] = useState(false)
-  const [likeOptionModal,setLikeOptionModal] = useState(false)
 
   return (
     <>
@@ -293,7 +356,6 @@ console.log(userInteractionData.like);
               <Entypo name="dots-three-vertical" size={24} color="#973838" />
             </Pressable>
           </View>
-
           {/* Profile Info */}
           <Animatable.View
             animation="zoomIn"
@@ -303,16 +365,13 @@ console.log(userInteractionData.like);
             <Image
               style={styles.profileImage}
               source={{
-                uri:userData.profileImageURL,
+                uri: userData.profileImageURL,
               }}
             />
             <Text style={styles.FullNameStyle}>{userData.name}</Text>
             <Text style={styles.UserNameStyle}>{userData.username}</Text>
-            <Text style={styles.bioText}>
-              {userData.bio}
-            </Text>
+            <Text style={styles.bioText}>{userData.bio}</Text>
           </Animatable.View>
-
           <Animatable.View
             animation="fadeInDown"
             direction="alternate"
@@ -327,7 +386,6 @@ console.log(userInteractionData.like);
               <Text style={styles.joinDate}>Joined: 23/02/2002</Text>
             </View> */}
           </Animatable.View>
-
           {/* Stats */}
           <Animatable.View
             animation="fadeInDown"
@@ -344,16 +402,26 @@ console.log(userInteractionData.like);
               <Text style={styles.statLabel}>Followers</Text>
             </View>
           </Animatable.View>
-
           {/* Options */}
           <View style={styles.optionsContainer}>
             <View style={styles.optionInsideContainer}>
-              <Pressable onPress={()=>setpostsOptionModal(true)} style={styles.postsOption}><Text  style={styles.postsOptionText}>Posts</Text></Pressable>
-              <Pressable onPress={()=>setLikeOptionModal(true)} style={styles.likesOption}><Text style={styles.likesOptionText}>Likes</Text></Pressable>
-              <Pressable style={styles.savedOption}><Text style={styles.savedOptionText}>Saved</Text></Pressable>
+              <Pressable style={styles.postsOption}>
+                <Text style={styles.postsOptionText}>Posts</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setSelectedOption("likes")}
+                style={styles.likesOption}
+              >
+                <Text style={styles.likesOptionText}>Likes</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setSelectedOption("saved")}
+                style={styles.savedOption}
+              >
+                <Text style={styles.savedOptionText}>Saved</Text>
+              </Pressable>
             </View>
           </View>
-
           {/* <Modal
             animationType="fade"
             visible={modalVisible}
@@ -376,7 +444,6 @@ console.log(userInteractionData.like);
               </View>
             </View>
           </Modal> */}
-
           <Modal
             animationType="fade"
             transparent={true}
@@ -401,8 +468,9 @@ console.log(userInteractionData.like);
                 </Pressable>
 
                 <Pressable
-                onPress={()=>setChangePasswordModal(true)}
-                style={{ flexDirection: "row", gap: 10 }}>
+                  onPress={() => setChangePasswordModal(true)}
+                  style={{ flexDirection: "row", gap: 10 }}
+                >
                   <MaterialIcons name="password" size={20} color="black" />
                   <Text style={{ fontSize: 16 }}>change password</Text>
                 </Pressable>
@@ -422,173 +490,221 @@ console.log(userInteractionData.like);
               </View>
             </View>
           </Modal>
-
-{/* edit profile  */}
+          {/* edit profile  */}
           <Modal
             animationType="slide"
             transparent={true}
             visible={editModalVisible}
             onRequestClose={() => setEditModalVisible(!editModalVisible)}
           >
-              <View style={styles.editmodalOvarlay}>
-                <KeyboardAvoidingView
-                            behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.editmodalContainer}>
-                  <Pressable
-                    style={styles.editcloseButton}
-                    onPress={() => {
-                      setEditModalVisible(false);
-                    }}
-                  >
-                    <Ionicons name="close" size={35} color="black" />
-                  </Pressable>
+            <View style={styles.editmodalOvarlay}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.editmodalContainer}
+              >
+                <Pressable
+                  style={styles.editcloseButton}
+                  onPress={() => {
+                    setEditModalVisible(false);
+                  }}
+                >
+                  <Ionicons name="close" size={35} color="black" />
+                </Pressable>
 
-                  <ScrollView>
-                    <Text style={styles.editmodalTitle}>Update Profile</Text>
-                    <View>
-                      <Pressable
+                <ScrollView>
+                  <Text style={styles.editmodalTitle}>Update Profile</Text>
+                  <View>
+                    <Pressable
                       style={styles.imageContainer}
-                      onPress={handleImagePicker}>
-                        <Text>Add Profile Image</Text>
-                      
+                      onPress={handleImagePicker}
+                    >
+                      <Text>Add Profile Image</Text>
+
                       <Image
-                        source={{ uri:profileImage }}
+                        source={{ uri: profileImage }}
                         style={styles.editprofileImage}
-                      /></Pressable>
-                    </View>
-                    <View>
-                      <Text>Name</Text>
-                      <TextInput 
+                      />
+                    </Pressable>
+                  </View>
+                  <View>
+                    <Text>Name</Text>
+                    <TextInput
                       style={styles.input}
                       value={name}
-                      onChangeText={(text)=>setName(text)}
-                      placeholder="update name" />
-                    </View>
+                      onChangeText={(text) => setName(text)}
+                      placeholder="update name"
+                    />
+                  </View>
 
-                    <View>
-                      <Text>Bio</Text>
-                      <TextInput 
+                  <View>
+                    <Text>Bio</Text>
+                    <TextInput
                       value={bio}
-                      onChangeText={(text)=>setBio(text)}
+                      onChangeText={(text) => setBio(text)}
                       style={styles.input}
-                      placeholder="bio" />
-                    </View>
+                      placeholder="bio"
+                    />
+                  </View>
 
-                    <View>
-                      <Text>City</Text>
-                      <TextInput 
+                  <View>
+                    <Text>City</Text>
+                    <TextInput
                       value={city}
-                      onChangeText={(text)=>setCity(text)}
+                      onChangeText={(text) => setCity(text)}
                       style={styles.input}
-                      placeholder="city" />
-                    </View>
+                      placeholder="city"
+                    />
+                  </View>
 
-                    <View>
-                      <Text>Age</Text>
-                      <TextInput
+                  <View>
+                    <Text>Age</Text>
+                    <TextInput
                       value={age}
-                      onChangeText={(text)=>setAge(text)}
+                      onChangeText={(text) => setAge(text)}
                       style={styles.input}
-                      placeholder="Age" />
-                    </View>
+                      placeholder="Age"
+                    />
+                  </View>
 
-                    <TouchableOpacity
+                  <TouchableOpacity
                     onPress={handleSaveChanges}
-                    style={styles.saveButton}>
-                      <Text 
-                      style={styles.saveButtonText}
-                      >Save changess</Text>
-                    </TouchableOpacity>
-                  </ScrollView>
-                </KeyboardAvoidingView>
+                    style={styles.saveButton}
+                  >
+                    <Text style={styles.saveButtonText}>Save changess</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </KeyboardAvoidingView>
             </View>
           </Modal>
-
           {/* change password  */}
-
           <Modal
             animationType="slide"
             transparent={true}
             visible={changePassword}
             onRequestClose={() => setChangePasswordModal(false)}
           >
-              <View style={styles.passwordChangemodalOvarlay}>
-                <KeyboardAvoidingView
-                            behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.editmodalContainer}>
-                  <Pressable
-                    style={styles.passwordChangecloseButton}
-                    onPress={() => setChangePasswordModal(false)}
-                  >
-                    <Ionicons name="close" size={35} color="black" />
-                  </Pressable>
+            <View style={styles.passwordChangemodalOvarlay}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.editmodalContainer}
+              >
+                <Pressable
+                  style={styles.passwordChangecloseButton}
+                  onPress={() => setChangePasswordModal(false)}
+                >
+                  <Ionicons name="close" size={35} color="black" />
+                </Pressable>
 
-                  <ScrollView>
-                    <Text style={styles.passwordChangemodalTitle}>Change password</Text>
-                    <View>
-                      <Text style={{padding:7,fontSize:18,fontWeight:'bold'}}>New Password</Text>
-                      <TextInput 
+                <ScrollView>
+                  <Text style={styles.passwordChangemodalTitle}>
+                    Change password
+                  </Text>
+                  <View>
+                    <Text
+                      style={{ padding: 7, fontSize: 18, fontWeight: "bold" }}
+                    >
+                      New Password
+                    </Text>
+                    <TextInput
                       value={newPassword}
-                      onChangeText={(text)=>setNewPassword(text)}
+                      onChangeText={(text) => setNewPassword(text)}
                       style={styles.passwordChangeinput}
-                      placeholder="new password" />
-                    </View>
+                      placeholder="new password"
+                    />
+                  </View>
 
-                    <View>
-                      <Text style={{padding:7,fontSize:18,fontWeight:'bold'}}>Confirm Password</Text>
-                      <TextInput 
+                  <View>
+                    <Text
+                      style={{ padding: 7, fontSize: 18, fontWeight: "bold" }}
+                    >
+                      Confirm Password
+                    </Text>
+                    <TextInput
                       value={confirmPassword}
-                      onChangeText={(text)=>setConfirmPassword(text)}
+                      onChangeText={(text) => setConfirmPassword(text)}
                       style={styles.passwordChangeinput}
-                      placeholder="confirm password" />
-                    </View>
+                      placeholder="confirm password"
+                    />
+                  </View>
 
-                    <TouchableOpacity
+                  <TouchableOpacity
                     onPress={handleChangeNewPassword}
-                    style={styles.saveButton}>
-                      <Text 
-                      style={styles.saveButtonText}
-                      >Save changes</Text>
+                    style={styles.saveButton}
+                  >
+                    <Text style={styles.saveButtonText}>Save changes</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </View>
+          </Modal>
+          {/* // like option */}
+          {/* <Modal
+      animationType="slide"
+      transparent={true}
+      visible={likeOptionModal}
+      onRequestClose={() =>setLikeOptionModal(false)}
+    > */}
+          {/* <View style={styles.likesOptionmodalOverlay}>
+        <View style={styles.likesOptionmodalContent}>
+          <FlatList
+            key={3} // Ensures re-render when needed
+            data={likeImagesLink}
+            keyExtractor={(item, index) => index.toString()}
+            numColumns={3} // 3 images per row
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.likesOptionimageContainer}>
+                <Image source={{ uri: item }} style={styles.likesOptionimage} />
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </View> */}
+          {/* </Modal> */}
+          {likeImagesLink ? (
+            <View style={styles.likesOptionmodalOverlay}>
+              <View style={styles.likesOptionmodalContent}>
+                <ScrollView 
+                refreshControl={
+                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                contentContainerStyle={styles.imageGrid}>
+                  {(selectedOption === "likes"
+                    ? likeImagesLink
+                    : savedImageLink
+                  ).map((meal) => (
+                    <TouchableOpacity
+                    onPress={()=>seeLikedFood(meal.id)}
+                      key={meal.id}
+                      style={styles.likesOptionimageContainer}
+                    >
+                      <Image
+                        source={{ uri: meal.link }}
+                        style={styles.likesOptionimage}
+                      />
                     </TouchableOpacity>
-                  </ScrollView>
-                </KeyboardAvoidingView>
+                  ))}
+                </ScrollView>
+              </View>
             </View>
-          </Modal>
-
-
-          // likesoption modal 
-          <Modal
-          animationType="slide"
-          transparent={true}
-          visible={likeOptionModal}
-          onRequestClose={()=> setLikeOptionModal(false)}
-          >
+          ) : (
             <View
-            style={styles.likeOptionmodalOverlay}
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignContent: "center",
+                backgroundColor: "#fff",
+              }}
             >
-              <FlatList
-              data={likeImagesLink}
-              horizontal
-              keyExtractor={(index)=>index.toString()}
-              renderItem={({item})=>(
-                <View style={styles.likeOptionimageContainer}>
-                  <TouchableOpacity>
-                    <Image source={{uri:item}} style={styles.likeOptionimage}/>
-                  </TouchableOpacity>
-                  <TouchableOpacity>
-                    <Image source={{uri:item}} style={styles.likeOptionimage}/>
-                  </TouchableOpacity>
-                  <TouchableOpacity>
-                    <Image source={{uri:item}} style={styles.likeOptionimage}/>
-                  </TouchableOpacity>
-                </View>
-              )}
-              />
+              <ActivityIndicator size="large" color="blue" />
             </View>
-          </Modal>
-
-
-
-
-         </View>
+          )}
+          {/* //saved images */}
+          {/* <View style={styles.likesOptionmodalOverlay}>
+        <View style={styles.likesOptionmodalContent}>
+          <SaveOption />
+        </View>
+      </View> */}
+        </View>
       ) : (
         <View
           style={{
@@ -699,47 +815,47 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   optionsContainer: {
-    flex:1
+    flex: 1,
   },
-  optionInsideContainer:{
-    flexDirection:'row',
-    justifyContent:"space-around"
-  },
-
-  postsOption:{
-    backgroundColor:'#973838',
-    borderRadius:10
-  },
-  postsOptionText:{
-    color:'white',
-    paddingHorizontal:20,
-    paddingVertical:7,
-    fontSize:17,
-    fontWeight:'bold'
+  optionInsideContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
   },
 
-  likesOption:{
-    backgroundColor:'#973838',
-    borderRadius:10
+  postsOption: {
+    backgroundColor: "#973838",
+    borderRadius: 10,
   },
-  likesOptionText:{
-    color:'white',
-    paddingHorizontal:20,
-    paddingVertical:7,
-    fontSize:17,
-    fontWeight:'bold'
+  postsOptionText: {
+    color: "white",
+    paddingHorizontal: 20,
+    paddingVertical: 7,
+    fontSize: 17,
+    fontWeight: "bold",
   },
 
-  savedOption:{
-    backgroundColor:'#973838',
-    borderRadius:10
+  likesOption: {
+    backgroundColor: "#973838",
+    borderRadius: 10,
   },
-  savedOptionText:{
-    color:'white',
-    paddingHorizontal:20,
-    paddingVertical:7,
-    fontSize:17,
-    fontWeight:'bold'
+  likesOptionText: {
+    color: "white",
+    paddingHorizontal: 20,
+    paddingVertical: 7,
+    fontSize: 17,
+    fontWeight: "bold",
+  },
+
+  savedOption: {
+    backgroundColor: "#973838",
+    borderRadius: 10,
+  },
+  savedOptionText: {
+    color: "white",
+    paddingHorizontal: 20,
+    paddingVertical: 7,
+    fontSize: 17,
+    fontWeight: "bold",
   },
 
   optionButton: {
@@ -800,113 +916,143 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     paddingBottom: 10,
   },
-  editmodalTitle:{
-    fontSize:18,
-    fontWeight:"800",
-    textAlign:'center',
-    marginBottom:10
+  editmodalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 10,
   },
 
-  imageContainer:{
-    alignItems:'center',
-    marginBottom:15
+  imageContainer: {
+    alignItems: "center",
+    marginBottom: 15,
   },
 
-  editprofileImage:{
-    width:100,
-    height:100,
-    borderRadius:50,
-    
+  editprofileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
 
-  input:{
-    borderBottomWidth:1,
-    marginBottom:10,
-    paddingVertical:5
+  input: {
+    borderBottomWidth: 1,
+    marginBottom: 10,
+    paddingVertical: 5,
   },
 
-  saveButton:{
-    backgroundColor:'blue',
-    padding:10,
-    borderRadius:5,
-    alignItems:'center',
-    marginTop:10
+  saveButton: {
+    backgroundColor: "blue",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
   },
-  saveButtonText:{
-    color:'white',
-    fontSize:16
+  saveButtonText: {
+    color: "white",
+    fontSize: 16,
   },
 
+  //  change password modal
 
-//  change password modal 
+  passwordChangemodalOvarlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
 
-passwordChangemodalOvarlay: {
-  flex: 1,
-  backgroundColor: "rgba(0, 0, 0, 0.5)",
-  justifyContent: "flex-end",
-},
+  passwordChangemodalContainer: {
+    width: "100%",
+    height: 400,
+    backgroundColor: "#f7efef",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 15,
+    alignContent: "center",
+    // alignItems: "center",
+  },
+  passwordChangecloseButton: {
+    // position: "absolute",
+    top: 10,
+    justifyContent: "flex-end",
+    paddingBottom: 10,
+  },
+  passwordChangemodalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 10,
+  },
 
-passwordChangemodalContainer: {
-  width: "100%",
-  height: 400,
-  backgroundColor: "#f7efef",
-  borderTopLeftRadius: 20,
-  borderTopRightRadius: 20,
-  padding: 15,
-  alignContent: "center",
-  // alignItems: "center",
-},
-passwordChangecloseButton: {
-  // position: "absolute",
-  top: 10,
-  justifyContent: "flex-end",
-  paddingBottom: 10,
-},
-passwordChangemodalTitle:{
-  fontSize:18,
-  fontWeight:"800",
-  textAlign:'center',
-  marginBottom:10
-},
+  passwordChangeinput: {
+    borderBottomWidth: 1,
+    marginBottom: 20,
+    paddingVertical: 5,
+  },
 
+  saveButton: {
+    backgroundColor: "blue",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
 
-passwordChangeinput:{
-  borderBottomWidth:1,
-  marginBottom:20,
-  paddingVertical:5
-},
+  // liked image show
+  //  likesOptionmodalOverlay: {
+  //   flex: 1,
+  //   justifyContent: 'flex-end', // Aligns modal to the bottom
+  //   backgroundColor: 'rgba(0, 0, 0, 0)', // Dim background
+  // },
+  // likesOptionmodalContent: {
+  //    height: 320,// Modal covers 50% of screen height
+  //   backgroundColor: '#fff',
+  //   borderTopLeftRadius: 20,
+  //   borderTopRightRadius: 20,
+  //   padding: 10,
+  // },
+  // likesOptionimageContainer: {
+  //   flex: 1,
+  //   aspectRatio: 1, // Keeps images square
+  //   margin: 2,
+  // },
+  // likesOptionimage: {
+  //   width: '100%',
+  //   height: '100%',
+  //   borderRadius: 5, // Optional rounded corners
+  // },
 
-saveButton:{
-  backgroundColor:'blue',
-  padding:10,
-  borderRadius:5,
-  alignItems:'center',
-  marginTop:10
-},
-saveButtonText:{
-  color:'white',
-  fontSize:16
-},
-
-// liked image show
-likeOptionmodalOverlay:{
-  flex:1,
-  backgroundColor:'rgba(0,0,0,0.5)',
-  justifyContent:"center",
-  alignItems:'center'
-},
-
-likeOptionimageContainer:{
-  marginVertical:10,
-  alignItems:'center',
-  flexDirection:'row'
-},
-
-likeOptionimage:{
-  width:100,
-  height:100,
-  borderRadius:10
-}
+  likesOptionmodalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end", // Aligns modal to the bottom
+    backgroundColor: "rgba(0,0,0,0.5)", // Dim background
+  },
+  likesOptionmodalContent: {
+    height: 320, // Modal covers 50% of screen height
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 10,
+    paddingBottom:55
+  },
+  imageGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap", // Enables grid-like layout
+    justifyContent: "space-between", // Distributes images evenly
+  },
+  likesOptionimageContainer: {
+    width: "32%", // 3 images per row with small margin
+    aspectRatio: 1, // Keeps images square
+    marginBottom: 4, // Space between rows
+  },
+  likesOptionimage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 5, // Optional rounded corners
+  },
 });
 
 export default ProfileScreen;
