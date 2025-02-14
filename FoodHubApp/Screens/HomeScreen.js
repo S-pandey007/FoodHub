@@ -68,7 +68,7 @@ const HomeScreen = () => {
           "interactions",
           "current"
         );
-        setDoc(userInteractionRef, {
+        updateDoc(userInteractionRef, {
           liked: likedPosts,
           dislike: unlikedPosts,
           saved: savedPosts,

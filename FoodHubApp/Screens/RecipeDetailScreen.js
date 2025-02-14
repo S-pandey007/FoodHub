@@ -13,8 +13,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 
-import {useDispatch,useSelector} from 'react-redux'
-import{likePost, unlikePost, savePost, removeSavedPost} from '../redux/postSlice'
+import { useDispatch, useSelector } from "react-redux";
+import {
+  likePost,
+  unlikePost,
+  savePost,
+  removeSavedPost,
+} from "../redux/postSlice";
 
 const RecipeDetailScreen = ({ route }) => {
   const meal = route?.params[0];
@@ -40,38 +45,49 @@ const RecipeDetailScreen = ({ route }) => {
   // console.log("Detail meal screen : ",meal);
   // console.log(meal.strIngredient1||"");
   // console.log("mealName : ",mealName);
-// logic behind like / ulike /saved
-const dispatch = useDispatch()
-const {likedPosts,savedPosts}= useSelector((state)=>state.posts)
+  // logic behind like / ulike /saved
+  const dispatch = useDispatch();
+  const { likedPosts, savedPosts , unlikedPosts } = useSelector((state) => state.posts);
 
-const isSaved = savedPosts.includes(recipeId);
-const isLiked =likedPosts.includes(recipeId);
-// const isUnliked = !likedPosts.includes(recipeId);
-// const isUnliked = !isLiked && likedPosts.length > 0;
-const isUnliked = likedPosts.includes(recipeId) === false && likedPosts.length > 0;
+  const isSaved = savedPosts.includes(recipeId);
+  const isLiked = likedPosts.includes(recipeId);
+  const isUnliked = !isLiked && unlikedPosts.includes(recipeId);
+  // const isUnliked = !likedPosts.includes(recipeId);
+  // const isUnliked = !isLiked && likedPosts.length > 0;
+  // const isUnliked =
+    // likedPosts.includes(recipeId) === false && likedPosts.length > 0;
 
+  // const [isUnliked , setIsUnliked] = React.useState(false)
+  // const [isSaved , setIsSaved] = React.useState(false)
+  // const isUnliked = !likedPosts.includes(recipeId) && likedPosts.length > 0;
 
-// const [isUnliked , setIsUnliked] = React.useState(false)
-// const [isSaved , setIsSaved] = React.useState(false)
-// const isUnliked = !likedPosts.includes(recipeId) && likedPosts.length > 0;
+  const handleLike = () => {
+    // setIsLiked(!isLiked);
+    // if(isUnliked) setIsUnliked(false)
+    // dispatch()
+    if (!isLiked) {
+          dispatch(likePost(recipeId));
+          // if (unlikedPosts.includes(recipeId)) {
+          //   dispatch(unlikePost(recipeId)); // Remove from unlikedPosts if it was unliked before
+          // }
+        }
+    
+  };
 
-const handleLike=()=>{
-  // setIsLiked(!isLiked);
-  // if(isUnliked) setIsUnliked(false)
-  // dispatch()
-  
-   if (!isLiked) dispatch(likePost(recipeId));
-}
+  const handleUnlike = () => {
+    // setIsUnliked(true)
+    // if(isLiked) setIsLiked(false)
+    // if (isLiked) dispatch(unlikePost(recipeId));
+    if (isLiked) {
+          dispatch(unlikePost(recipeId));
+        }
+  };
 
-const handleUnlike = ()=>{
-  // setIsUnliked(true)
-  // if(isLiked) setIsLiked(false)
-  if (isLiked) dispatch(unlikePost(recipeId));
-}
-
-const handleSave = () => {
-  isSaved ? dispatch(removeSavedPost(recipeId)) : dispatch(savePost(recipeId));
-};
+  const handleSave = () => {
+    isSaved
+      ? dispatch(removeSavedPost(recipeId))
+      : dispatch(savePost(recipeId));
+  };
 
   return (
     <>
@@ -105,34 +121,49 @@ const handleSave = () => {
         </Animatable.View>
 
         {/* Like/Dislike & Heart Icons */}
-                    <Animatable.View
-                      animation="fadeInDown"
-                      duration={1200}
-                      style={styles.actionsContainer}
-                    >
-                      <View style={styles.actionsLeft}>
-                        <Pressable onPress={handleLike}>
-                          {
-                            likedPosts.includes(recipeId) ? (<AntDesign name="like1" size={27} color="black" />):(<AntDesign name="like2" size={27} color="black" />)
-                          }
-                        </Pressable>
-                        <Pressable onPress={handleUnlike}>
-                          {
-                            isLiked ? (<AntDesign style={{top:8}} name="dislike2" size={27} color="black" />):(<AntDesign style={{top:8}} name="dislike1" size={27} color="black" />)
-                          }
-                        </Pressable>
-                      </View>
-                      <View style={styles.actionsRight}>
-                        <Pressable onPress={handleSave}>
-                          {
-                            savedPosts.includes(recipeId)?(<AntDesign name="heart" size={27} color="black" />):(<AntDesign name="hearto" size={27} color="black" />)
-                          }
-                        </Pressable>
-                        
-                        <AntDesign name="sharealt" size={24} color="black" />
-                      </View>
-                    </Animatable.View>
-        
+        <Animatable.View
+          animation="fadeInDown"
+          duration={1200}
+          style={styles.actionsContainer}
+        >
+          <View style={styles.actionsLeft}>
+            <Pressable onPress={handleLike}>
+              {isLiked ? (
+                <AntDesign name="like1" size={27} color="black" />
+              ) : (
+                <AntDesign name="like2" size={27} color="black" />
+              )}
+            </Pressable>
+            <Pressable onPress={handleUnlike}>
+              {isUnliked  ?(
+                <AntDesign
+                  style={{ top: 8 }}
+                  name="dislike1"
+                  size={27}
+                  color="black"
+                />
+              ) : (
+                <AntDesign
+                  style={{ top: 8 }}
+                  name="dislike2"
+                  size={27}
+                  color="black"
+                />
+              )}
+            </Pressable>
+          </View>
+          <View style={styles.actionsRight}>
+            <Pressable onPress={handleSave}>
+              {savedPosts.includes(recipeId) ? (
+                <AntDesign name="heart" size={27} color="black" />
+              ) : (
+                <AntDesign name="hearto" size={27} color="black" />
+              )}
+            </Pressable>
+
+            <AntDesign name="sharealt" size={24} color="black" />
+          </View>
+        </Animatable.View>
 
         {/* Title and YouTube Video */}
         <Animatable.View

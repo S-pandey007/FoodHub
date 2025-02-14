@@ -32,7 +32,7 @@ import * as ImagePicker from "expo-image-picker";
 import {ToastAndroid} from "react-native";
 import { useDispatch } from "react-redux";
 import{likePost, unlikePost, savePost, removeSavedPost} from '../redux/postSlice'
-
+import axios from "axios";
 const ProfileScreen = () => {
   const Profile_Option = [
     { id: "1", option: "Post" },
@@ -198,7 +198,15 @@ const ProfileScreen = () => {
   }
 
 
-  // option logic 
+  // option logic
+  const [userInteractionData , setUserInteractionData] = useState({
+    like:[],
+    dislike:[],
+    saved:[]
+  }) 
+  
+  
+  
  useEffect(()=>{
   const fetchUserInteractions = async()=>{
     try {
@@ -208,10 +216,15 @@ const ProfileScreen = () => {
         const docSnap = await getDoc(userInteractionRef)
         
         if(docSnap.exists()){
-          const {liked,unliked,saved} = docSnap.data()
-          console.log("liked : ",liked);
-          console.log("Unliked : ",unliked);
-          console.log("saved : ",saved);
+          const {liked,dislike,saved} = docSnap.data()
+          // console.log("liked : ",liked);
+          // console.log("Unliked : ",dislike);
+          // console.log("saved : ",saved);
+          setUserInteractionData({
+            like:liked,
+            dislike:dislike,
+            saved:saved
+            })
         }
       }
     } catch (error) {
@@ -221,7 +234,50 @@ const ProfileScreen = () => {
   }
   fetchUserInteractions()
  },[])
+
+// write logic to show liked recipes
+console.log(userInteractionData.like);
+
+  const fetchMeals = async (id) => {
+    try {
+      const data = await axios.get(
+        `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`
+      );
+      const JSONdata = data.data.meals[0];
+
+      // setMeals(JSONdata);
+      // console.log("meal : ",JSONdata);
+      console.log("meal image : ",JSONdata.strMealThumb);
+      const result = JSONdata.strMealThumb
+      return result
+    } catch (error) {
+      console.error("Data not fetch : ", error);
+    }
+  };
+  
+
+ const likeImages = async()=>{
+  try {
+    const result = await Promise.all(userInteractionData.like.map(id=>fetchMeals(id)))
+    console.log("all fetched images ",result);
+    return result
+  } catch (error) {
+    console.error("error fetching meals : ",error)
+  }
+ }
+
+ const [likeImagesLink , setLikeImagesLink] = useState([])
+ useEffect(()=>{
+  likeImages().then(images=>{
+    console.log("like imges : ",images)
+    setLikeImagesLink(images)
+  })
+ },[])
+
+//  console.log("linkImageink" , likeImagesLink);
+ 
   const [postsOptionModal,setpostsOptionModal] = useState(false)
+  const [likeOptionModal,setLikeOptionModal] = useState(false)
 
   return (
     <>
@@ -293,7 +349,7 @@ const ProfileScreen = () => {
           <View style={styles.optionsContainer}>
             <View style={styles.optionInsideContainer}>
               <Pressable onPress={()=>setpostsOptionModal(true)} style={styles.postsOption}><Text  style={styles.postsOptionText}>Posts</Text></Pressable>
-              <Pressable style={styles.likesOption}><Text style={styles.likesOptionText}>Likes</Text></Pressable>
+              <Pressable onPress={()=>setLikeOptionModal(true)} style={styles.likesOption}><Text style={styles.likesOptionText}>Likes</Text></Pressable>
               <Pressable style={styles.savedOption}><Text style={styles.savedOptionText}>Saved</Text></Pressable>
             </View>
           </View>
@@ -498,20 +554,41 @@ const ProfileScreen = () => {
           </Modal>
 
 
-          // Postsoption modal 
+          // likesoption modal 
           <Modal
-            animationType="slide"
-            transparent={true}
-            visible={postsOptionModal}
-            onRequestClose={() => setpostsOptionModal(false)}
+          animationType="slide"
+          transparent={true}
+          visible={likeOptionModal}
+          onRequestClose={()=> setLikeOptionModal(false)}
           >
-          <View>
-
-          </View>
+            <View
+            style={styles.likeOptionmodalOverlay}
+            >
+              <FlatList
+              data={likeImagesLink}
+              horizontal
+              keyExtractor={(index)=>index.toString()}
+              renderItem={({item})=>(
+                <View style={styles.likeOptionimageContainer}>
+                  <TouchableOpacity>
+                    <Image source={{uri:item}} style={styles.likeOptionimage}/>
+                  </TouchableOpacity>
+                  <TouchableOpacity>
+                    <Image source={{uri:item}} style={styles.likeOptionimage}/>
+                  </TouchableOpacity>
+                  <TouchableOpacity>
+                    <Image source={{uri:item}} style={styles.likeOptionimage}/>
+                  </TouchableOpacity>
+                </View>
+              )}
+              />
+            </View>
           </Modal>
+
+
+
+
          </View>
-
-
       ) : (
         <View
           style={{
@@ -810,6 +887,26 @@ saveButtonText:{
   color:'white',
   fontSize:16
 },
+
+// liked image show
+likeOptionmodalOverlay:{
+  flex:1,
+  backgroundColor:'rgba(0,0,0,0.5)',
+  justifyContent:"center",
+  alignItems:'center'
+},
+
+likeOptionimageContainer:{
+  marginVertical:10,
+  alignItems:'center',
+  flexDirection:'row'
+},
+
+likeOptionimage:{
+  width:100,
+  height:100,
+  borderRadius:10
+}
 });
 
 export default ProfileScreen;
