@@ -4,7 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import SplashScreen from "./Screens/SplashScreen";
 import WelcomScr from "./Screens/WelcomScr";
 import HomeScreen from "./Screens/HomeScreen";
-import SearchScree from "./Screens/SearchScree";
+import SearchScreen from "./Screens/SearchScree";
 import ProfileScreen from "./Screens/ProfileScreen";
 import LikedRecipe from "./Screens/LikedRecipe";
 import UserPost from "./Screens/UserPost";
@@ -130,20 +130,16 @@ const Navigation = () => {
       <Stack.Navigator>
         {user ? (
           <>
-            {/* <Stack.Screen
-              name="Splash"
-              component={SplashScreen}
-              options={{ headerShown: false }}
-            /> */}
-
             <Stack.Screen
               name="Home"
-              component={TabNavigator}
+              component={TabNavigator} 
               options={{ headerShown: false }}
-            />
+            >
+             
+            </Stack.Screen>
             <Stack.Screen
               name="Search"
-              component={SearchScree}
+              component={SearchScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen
@@ -151,21 +147,21 @@ const Navigation = () => {
               component={RecipeDetailScreen}
               options={{ headerShown: false }}
             />
-            <Stack.Screen
+            {/* <Stack.Screen
               name="Post"
               component={UserPost}
               options={{ headerShown: false }}
-            />
+            /> */}
             <Stack.Screen
               name="Liked"
               component={LikedRecipe}
               options={{ headerShown: false }}
             />
-            <Stack.Screen
+            {/* <Stack.Screen
               name="Profile"
               component={ProfileScreen}
               options={{ headerShown: false }}
-            />
+            /> */}
             <Stack.Screen
               name="CategoryDetail"
               component={CategorieDetail}
@@ -176,11 +172,11 @@ const Navigation = () => {
               component={HomeFoodDetail}
               options={{ headerShown: false }}
             />
-            <Stack.Screen
+            {/* <Stack.Screen
               name="CreatePost"
               component={CreatePost}
               options={{ headerShown: false }}
-            />
+            /> */}
             <Stack.Screen
               name="PostDetail"
               component={PostDetailScreen}

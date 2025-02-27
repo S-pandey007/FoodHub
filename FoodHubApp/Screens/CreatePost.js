@@ -15,6 +15,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
+import { auth,db } from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
 // import Video from "react-native-video";
 
 import * as ImagePicker from "expo-image-picker";
@@ -46,7 +48,7 @@ const CreatePost = () => {
   // console.log("ingredient : ",ingredient)
 
   // send data 
-const sendData = ()=>{
+const sendData = async()=>{
   setPostData({...Postdata,
     title:title,
     description:description,
@@ -56,6 +58,29 @@ const sendData = ()=>{
     ingredient:ingredient,
     steps:steps
   })
+  const newPost = {...Postdata,
+    userId:auth.currentUser.uid,
+    createdAt:new Date().toISOString(),
+    likeCount:0,
+    commentCount:0,
+  }
+  try {
+    const user = auth.currentUser;
+    if(user){
+      console.log("User is signed in : ", user);
+      console.log("User id : ", user.uid);
+    }else{
+      console.log("User is not signed in");
+    }
+
+    const docRef = await addDoc(collection(db, "posts"),newPost);
+    console.log("Document written with ID: ", docRef.id);
+
+  } catch (error) {
+    console.error("Error adding Post in database : ", error);
+    
+  }
+  
   console.log("Postdata :", Postdata);
   setCategory("")
   setDescription("")
@@ -64,6 +89,8 @@ const sendData = ()=>{
   setImage("")
   setTitle("")
   setSteps("")
+
+
   
 }
 
@@ -398,6 +425,7 @@ const sendData = ()=>{
             <ScrollView style={styles.ingredientsList}>
               {steps.map((steps, index) => (
                 <View
+                key={index}
                   style={{
                     flexDirection: "row",
                     marginBottom: 8,

@@ -1,1058 +1,418 @@
-import React, { use, useEffect } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Image,
-  FlatList,
+  ScrollView,
   Pressable,
   Modal,
-  ScrollView,
-  TouchableWithoutFeedback,
   ActivityIndicator,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
   Alert,
-  RefreshControl
+  RefreshControl,
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
-import { useState ,useCallback} from "react";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc ,onSnapshot} from "firebase/firestore";
-import { signOut } from "firebase/auth";
-import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-// import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { ToastAndroid } from "react-native";
-import { useDispatch } from "react-redux";
-import {
-  likePost,
-  unlikePost,
-  savePost,
-  removeSavedPost,
-} from "../redux/postSlice";
+import { auth, db } from "../firebase";
+import { doc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 import axios from "axios";
-import Navigation from "../Navigation";
+import styles from "../styles/ProfileStyle";
+
 const ProfileScreen = () => {
-  const Profile_Option = [
-    { id: "1", option: "Post" },
-    { id: "2", option: "Media" },
-    { id: "3", option: "Likes" },
-    { id: "4", option: "WatchList" },
-  ];
-  // const [optionDataShow,setOptionDataShow] = useState({})
   const navigation = useNavigation();
-  const [MenuModal, setMenuModal] = useState(false);
-  const [userData, setUserData] = useState();
+
+  // State for user data and loading
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // State for edit profile modal
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [profileImage, setProfileImage] = useState("");
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+  const [city, setCity] = useState("");
+  const [age, setAge] = useState("");
 
-  // edit userinformation
+  // State for menu and password change modal
+  const [menuModal, setMenuModal] = useState(false);
+  const [changePasswordModal, setChangePasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [profileImage, setProfileImage] = useState();
-  const [name, setName] = useState();
-  const [bio, setBio] = useState();
-  const [city, setCity] = useState();
-  const [age, setAge] = useState();
-
-  // change password
-  const [changePassword, setChangePasswordModal] = useState(false);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setUserData(docSnap.data());
-            setName(userData.name);
-            setAge(userData.age);
-            setBio(userData.bio);
-            setCity(userData.city);
-            setProfileImage(userData.profileImageURL);
-            // console.log("user data : ", userData);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      }
-    };
-    fetchUserData();
-  }, []);
-  // console.log("name",name);
-  // console.log("profile image",profileImage);
-
-  //profile image picker
-  const handleImagePicker = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      uploadCloud(result.assets[0].uri);
-    }
-  };
-
-  // handle logout
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigation.navigate("Welcome");
-  };
-
-  // cloudinary
-  const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/do9zifunn/upload";
-  const UPLOAD_PRESET = "auth_app";
-
-  // fetched image from local screen to store in cloud
-  const uploadCloud = async (imageLocalPath) => {
-    const ImageData = new FormData();
-    ImageData.append("file", {
-      uri: imageLocalPath,
-      type: "image/jpeg",
-      name: `${name}profile.jpeg`,
-    });
-    ImageData.append("upload_preset", UPLOAD_PRESET);
-    ImageData.append("cloud_name", "do9zifunn");
-
-    try {
-      const response = await fetch(CLOUDINARY_URL, {
-        method: "POST",
-        body: ImageData,
-      });
-
-      const result = await response.json();
-
-      if (result.secure_url) {
-        setProfileImage(result.secure_url);
-        console.log("uploaded image URL : ", result.secure_url);
-      }
-    } catch (error) {
-      console.error("Error uploadign image in cloudinary", error);
-    }
-  };
-
-  // update user information
-  const handleSaveChanges = async () => {
-    console.log("name : ", name);
-    console.log("city : ", city);
-    console.log("profile image cloud URL : ", profileImage);
-    console.log("bio : ", bio);
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, {
-          name: name,
-          bio: bio,
-          city: city,
-          age: age,
-          profileImageURL: profileImage,
-        });
-        console.log("user information updated updated");
-        setEditModalVisible(false);
-        setName("");
-        setAge("");
-        setBio("");
-        setCity("");
-        setProfileImage("");
-      }
-      // console.log("I think user not exist check this log")
-    } catch (error) {
-      console.error("Update information failed : ", error);
-    }
-  };
-
-  // change user password
-  const [newPassword, setNewPassword] = useState();
-  const [confirmPassword, setConfirmPassword] = useState();
-  const handleChangeNewPassword = async () => {
-    if (newPassword !== confirmPassword) {
-      Alert.alert("Error", "Password not matched");
-      return;
-    }
-    const user = auth.currentUser;
-    if (!user) {
-      Alert.alert("Error", "No user found.");
-      return;
-    }
-    try {
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        password: newPassword,
-      });
-      console.log("Password Updated");
-      setConfirmPassword("");
-      setNewPassword("");
-      ToastAndroid.show("Password updated successfully!", ToastAndroid.SHORT);
-    } catch (error) {
-      console.error("Something goes wrong ! Password not update ", error);
-    }
-  };
-
-  // option logic
+  // State for liked/saved content
   const [userInteractionData, setUserInteractionData] = useState({
     like: [],
     dislike: [],
     saved: [],
   });
+  const [likeImagesLink, setLikeImagesLink] = useState([]);
+  const [savedImageLink, setSavedImageLink] = useState([]);
+  const [selectedOption, setSelectedOption] = useState("likes");
+  const [refreshing, setRefreshing] = useState(false);
 
+  // Fetch user data on mount
   useEffect(() => {
-    const fetchUserInteractions = async () => {
+    const fetchUserData = async () => {
       try {
         const user = auth.currentUser;
-        if (user) {
-          const userInteractionRef = doc(
-            db,
-            "users",
-            user.uid,
-            "interactions",
-            "current"
-          );
-
-          // const docSnap = await getDoc(userInteractionRef);
-          // if (docSnap.exists()) {
-          //   const { liked, dislike, saved } = docSnap.data();
-          //   setUserInteractionData({
-          //     like: liked,
-          //     dislike: dislike,
-          //     saved: saved,
-          //   });
-          // }
-
-          const unsubscribe = onSnapshot(userInteractionRef, (docSnap) => {
-            if (docSnap.exists()) {
-              const { liked, dislike, saved } = docSnap.data();
-              setUserInteractionData({
-                like: liked,
-                dislike: dislike,
-                saved: saved,
-              });
-            }
-          });
-        
-          return () => unsubscribe();
+        if (!user) throw new Error("No authenticated user");
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setUserData(data);
+          setName(data.name || "");
+          setBio(data.bio || "");
+          setCity(data.city || "");
+          setAge(data.age || "");
+          setProfileImage(data.profileImageURL || "");
+        } else {
+          console.log("No user data found");
         }
       } catch (error) {
-        console.error("Error fetching user interaction : ", error);
+        console.error("Error fetching user data: ", error);
+        Alert.alert("Error", "Failed to load profile data");
+      } finally {
+        setIsLoading(false);
       }
-    };    
-    fetchUserInteractions();
+    };
+    fetchUserData();
   }, []);
 
-  // write logic to show liked recipes
-  // console.log(userInteractionData.like);
-  // console.log(userInteractionData.saved);
+  // Fetch user interactions in real-time
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
 
+    const userInteractionRef = doc(db, "users", user.uid, "interactions", "current");
+    const unsubscribe = onSnapshot(userInteractionRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const { liked = [], dislike = [], saved = [] } = docSnap.data();
+        setUserInteractionData({ like: liked, dislike, saved });
+      }
+    }, (error) => {
+      console.error("Error fetching interactions: ", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch liked and saved images when interactions change
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const [likedImages, savedImages] = await Promise.all([
+          Promise.all(userInteractionData.like.map(fetchMeals)),
+          Promise.all(userInteractionData.saved.map(fetchMeals)),
+        ]);
+        setLikeImagesLink(likedImages.filter(Boolean));
+        setSavedImageLink(savedImages.filter(Boolean));
+      } catch (error) {
+        console.error("Error fetching images: ", error);
+      }
+    };
+    fetchImages();
+  }, [userInteractionData]);
+
+  // Cloudinary configuration
+  const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/do9zifunn/upload";
+  const UPLOAD_PRESET = "auth_app";
+
+  // Utility Functions
   const fetchMeals = async (id) => {
     try {
-      const data = await axios.get(
-        `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`
-      );
-      const JSONdata = data.data.meals[0];
-
-      // setMeals(JSONdata);
-      // console.log("meal : ",JSONdata);
-      // console.log("meal image : ", JSONdata.strMealThumb);
-      const result = { link: JSONdata.strMealThumb, id: id };
-      return result;
+      const { data } = await axios.get(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+      const meal = data.meals?.[0];
+      return meal ? { link: meal.strMealThumb, id } : null;
     } catch (error) {
-      console.error("Data not fetch : ", error);
+      console.error(`Error fetching meal ${id}: `, error);
+      return null;
+    }
+  };
+
+  const uploadCloud = async (imageLocalPath) => {
+    const imageData = new FormData();
+    imageData.append("file", {
+      uri: imageLocalPath,
+      type: "image/jpeg",
+      name: `${name || "user"}profile.jpeg`,
+    });
+    imageData.append("upload_preset", UPLOAD_PRESET);
+    imageData.append("cloud_name", "do9zifunn");
+
+    try {
+      const response = await fetch(CLOUDINARY_URL, { method: "POST", body: imageData });
+      const result = await response.json();
+      if (result.secure_url) {
+        setProfileImage(result.secure_url);
+        ToastAndroid.show("Image uploaded successfully!", ToastAndroid.SHORT);
+      }
+    } catch (error) {
+      console.error("Error uploading image: ", error);
+      Alert.alert("Error", "Failed to upload image");
+    }
+  };
+
+  const handleImagePicker = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled) await uploadCloud(result.assets[0].uri);
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("No authenticated user");
+      const userRef = doc(db, "users", user.uid);
+      const updatedData = { name, bio, city, age, profileImageURL: profileImage };
+      await updateDoc(userRef, updatedData);
+      setUserData((prev) => ({ ...prev, ...updatedData }));
+      setEditModalVisible(false);
+      ToastAndroid.show("Profile updated successfully!", ToastAndroid.SHORT);
+    } catch (error) {
+      console.error("Error updating profile: ", error);
+      Alert.alert("Error", "Failed to update profile");
+    }
+  };
+
+  const handleChangeNewPassword = async () => {
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("No authenticated user");
+      await updateDoc(doc(db, "users", user.uid), { password: newPassword });
+      setNewPassword("");
+      setConfirmPassword("");
+      setChangePasswordModal(false);
+      ToastAndroid.show("Password updated successfully!", ToastAndroid.SHORT);
+    } catch (error) {
+      console.error("Error updating password: ", error);
+      Alert.alert("Error", "Failed to update password");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate("Welcome");
+    } catch (error) {
+      console.error("Error logging out: ", error);
+      Alert.alert("Error", "Failed to log out");
     }
   };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await savedImages();
-    await likeImages(); // Re-fetch images
+    await Promise.all([fetchMeals(userInteractionData.like), fetchMeals(userInteractionData.saved)]);
     setRefreshing(false);
-  }, []);
-
-  const savedImages = async () => {
-    try {
-      const result = await Promise.all(
-        userInteractionData.saved.map((id) => fetchMeals(id))
-      );
-      // console.log("all fetched images ", result);
-      return result;
-    } catch (error) {
-      console.error("error fetching meals : ", error);
-    }
-  };
-
-  
-  const likeImages = async () => {
-    try {
-      const result = await Promise.all(
-        userInteractionData.like.map((id) => fetchMeals(id))
-      );
-      // console.log("all fetched images : ", result);
-      return result;
-    } catch (error) {
-      console.error("error fetching meals : ", error);
-    }
-  };
-  const [refreshing, setRefreshing] = useState(false);
-  const [likeImagesLink, setLikeImagesLink] = useState([]);
-  const [savedImageLink, setSavedImageLink] = useState([]);
-  
-  useEffect(() => {
-    
-    const likeImagesArr = async () => {
-      await likeImages().then((images) => {
-        // console.log("like imges : ", images);
-        setLikeImagesLink(images);
-      });
-    };
-
-    const savedImagesArr = async () => {
-      await savedImages().then((images) => {
-        // console.log("like imges : ", images);
-        setSavedImageLink(images);
-      });
-    };
-    
-    savedImagesArr();
-    likeImagesArr();
-   
   }, [userInteractionData]);
 
-  
+  const seeLikedFood = (id) => navigation.navigate("SearchDetail", { mealID: id });
 
-  
-
-  //  console.log("linkImageink" , likeImagesLink);
-
-  const [selectedOption, setSelectedOption] = useState("likes");
-  // const windowHeight = Dimensions.get('window').height;
-
-  const seeLikedFood =(id)=>{
-    // console.log(id);
-    navigation.navigate("SearchDetail",{mealID:id})
+  // Render
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#973838" />
+      </View>
+    );
   }
 
   return (
-    <>
-      {userData ? (
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Pressable onPress={() => navigation.navigate("Home")}>
-              <AntDesign name="arrowleft" size={24} color="#973838" />
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable onPress={() => navigation.navigate("Home")}>
+          <AntDesign name="arrowleft" size={24} color="#973838" />
+        </Pressable>
+        <Text style={styles.headerText}>Profile</Text>
+        <Pressable onPress={() => setMenuModal(true)}>
+          <Entypo name="dots-three-vertical" size={24} color="#973838" />
+        </Pressable>
+      </View>
+
+      {/* Profile Info */}
+      <Animatable.View animation="zoomIn" duration={1400} style={styles.profileSection}>
+        <Image style={styles.profileImage} source={{ uri: userData?.profileImageURL || "https://via.placeholder.com/150" }} />
+        <Text style={styles.FullNameStyle}>{userData?.name || "Unnamed"}</Text>
+        <Text style={styles.UserNameStyle}>{userData?.username || "No username"}</Text>
+        <Text style={styles.bioText}>{userData?.bio || "No bio yet"}</Text>
+      </Animatable.View>
+
+      <Animatable.View animation="fadeInDown" duration={1200}>
+        <View style={styles.locationRow}>
+          <EvilIcons name="location" size={24} color="#973838" />
+          <Text style={styles.UserLocation}>{userData?.city || "Unknown"}</Text>
+        </View>
+      </Animatable.View>
+
+      {/* Stats */}
+      <Animatable.View animation="fadeInDown" duration={1200} style={styles.statsContainer}>
+        <View style={styles.stat}>
+          <Text style={styles.statValue}>23</Text>
+          <Text style={styles.statLabel}>Following</Text>
+        </View>
+        <View style={styles.stat}>
+          <Text style={styles.statValue}>1.2k</Text>
+          <Text style={styles.statLabel}>Followers</Text>
+        </View>
+      </Animatable.View>
+
+      {/* Options */}
+      <View style={styles.optionsContainer}>
+        <View style={styles.optionInsideContainer}>
+          <Pressable style={styles.postsOption}>
+            <Text style={styles.postsOptionText}>Posts</Text>
+          </Pressable>
+          <Pressable onPress={() => setSelectedOption("likes")} style={styles.likesOption}>
+            <Text style={styles.likesOptionText}>Likes</Text>
+          </Pressable>
+          <Pressable onPress={() => setSelectedOption("saved")} style={styles.savedOption}>
+            <Text style={styles.savedOptionText}>Saved</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Menu Modal */}
+      <Modal animationType="fade" transparent visible={menuModal} onRequestClose={() => setMenuModal(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Pressable onPress={() => setMenuModal(false)} style={{ flexDirection: "row-reverse" }}>
+              <Entypo name="cross" size={24} color="black" />
             </Pressable>
-            <Text style={styles.headerText}>Profile</Text>
-            <Pressable onPress={() => setMenuModal(true)}>
-              <Entypo name="dots-three-vertical" size={24} color="#973838" />
+            <Pressable onPress={() => setEditModalVisible(true)} style={{ flexDirection: "row", gap: 10 }}>
+              <AntDesign name="edit" size={20} color="black" />
+              <Text style={{ fontSize: 16 }}>Edit profile</Text>
+            </Pressable>
+            <Pressable onPress={() => setChangePasswordModal(true)} style={{ flexDirection: "row", gap: 10 }}>
+              <MaterialIcons name="password" size={20} color="black" />
+              <Text style={{ fontSize: 16 }}>Change password</Text>
+            </Pressable>
+            <Pressable onPress={handleLogout} style={{ flexDirection: "row", gap: 10 }}>
+              <MaterialIcons name="logout" size={20} color="black" />
+              <Text style={{ fontSize: 16 }}>Logout</Text>
+            </Pressable>
+            <Pressable style={{ flexDirection: "row", gap: 10 }}>
+              <AntDesign name="deleteuser" size={20} color="black" />
+              <Text style={{ fontSize: 16 }}>Delete account</Text>
             </Pressable>
           </View>
-          {/* Profile Info */}
-          <Animatable.View
-            animation="zoomIn"
-            duration={1400}
-            style={styles.profileSection}
-          >
-            <Image
-              style={styles.profileImage}
-              source={{
-                uri: userData.profileImageURL,
-              }}
-            />
-            <Text style={styles.FullNameStyle}>{userData.name}</Text>
-            <Text style={styles.UserNameStyle}>{userData.username}</Text>
-            <Text style={styles.bioText}>{userData.bio}</Text>
-          </Animatable.View>
-          <Animatable.View
-            animation="fadeInDown"
-            direction="alternate"
-            duration={1200}
-          >
-            <View style={styles.locationRow}>
-              <EvilIcons name="location" size={24} color="#973838" />
-              <Text style={styles.UserLocation}>{userData.city}</Text>
-            </View>
-            {/* <View style={styles.joinDateRow}>
-              <EvilIcons name="calendar" size={24} color="#973838" />
-              <Text style={styles.joinDate}>Joined: 23/02/2002</Text>
-            </View> */}
-          </Animatable.View>
-          {/* Stats */}
-          <Animatable.View
-            animation="fadeInDown"
-            direction="alternate"
-            duration={1200}
-            style={styles.statsContainer}
-          >
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>23</Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </View>
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>1.2k</Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </View>
-          </Animatable.View>
-          {/* Options */}
-          <View style={styles.optionsContainer}>
-            <View style={styles.optionInsideContainer}>
-              <Pressable style={styles.postsOption}>
-                <Text style={styles.postsOptionText}>Posts</Text>
+        </View>
+      </Modal>
+
+      {/* Edit Profile Modal */}
+      <Modal animationType="slide" transparent visible={editModalVisible} onRequestClose={() => setEditModalVisible(false)}>
+        <View style={styles.editmodalOvarlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.editmodalContainer}>
+            <Pressable style={styles.editcloseButton} onPress={() => setEditModalVisible(false)}>
+              <Ionicons name="close" size={35} color="black" />
+            </Pressable>
+            <ScrollView>
+              <Text style={styles.editmodalTitle}>Update Profile</Text>
+              <Pressable style={styles.imageContainer} onPress={handleImagePicker}>
+                <Text>Add Profile Image</Text>
+                <Image source={{ uri: profileImage || "https://via.placeholder.com/150" }} style={styles.editprofileImage} />
               </Pressable>
-              <Pressable
-                onPress={() => setSelectedOption("likes")}
-                style={styles.likesOption}
-              >
-                <Text style={styles.likesOptionText}>Likes</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setSelectedOption("saved")}
-                style={styles.savedOption}
-              >
-                <Text style={styles.savedOptionText}>Saved</Text>
-              </Pressable>
-            </View>
-          </View>
-          {/* <Modal
-            animationType="fade"
-            visible={modalVisible}
-            transparent={true}
-            onRequestClose={() => {
-              Alert.alert('Modal has been closed.');
-              setModalVisible(!modalVisible);
-            }}>
-            <View style={{width:"auto",height:300,backgroundColor:'red',top:430,left:10,right:200}}>
-              <Pressable onPress={()=>setModalVisible(false)}>
-              <Entypo name="cross" size={34} color="black" />
-              </Pressable>
-              <View style={styles.modalView}>
-                <Text style={styles.modalText}>{optionDataShow.option}</Text>
-                <Pressable
-                  style={[styles.button, styles.buttonClose]}
-                  onPress={() => setModalVisible(!modalVisible)}>
-                  <Text style={styles.textStyle}>Hide Modal</Text>
-                </Pressable>
+              <View>
+                <Text>Name</Text>
+                <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Update name" />
               </View>
-            </View>
-          </Modal> */}
-          <Modal
-            animationType="fade"
-            transparent={true}
-            visible={MenuModal}
-            onRequestClose={() => setMenuModal(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Pressable
-                  onPress={() => setMenuModal(false)}
-                  style={{ flexDirection: "row-reverse" }}
-                >
-                  <Entypo name="cross" size={24} color="black" />
-                </Pressable>
-
-                <Pressable
-                  onPress={() => setEditModalVisible(true)}
-                  style={{ flexDirection: "row", gap: 10 }}
-                >
-                  <AntDesign name="edit" size={20} color="black" />
-                  <Text style={{ fontSize: 16 }}>Edit profile</Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => setChangePasswordModal(true)}
-                  style={{ flexDirection: "row", gap: 10 }}
-                >
-                  <MaterialIcons name="password" size={20} color="black" />
-                  <Text style={{ fontSize: 16 }}>change password</Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={handleLogout}
-                  style={{ flexDirection: "row", gap: 10 }}
-                >
-                  <MaterialIcons name="logout" size={20} color="black" />
-                  <Text style={{ fontSize: 16 }}>logout</Text>
-                </Pressable>
-
-                <Pressable style={{ flexDirection: "row", gap: 10 }}>
-                  <AntDesign name="deleteuser" size={20} color="black" />
-                  <Text style={{ fontSize: 16 }}>delete account</Text>
-                </Pressable>
+              <View>
+                <Text>Bio</Text>
+                <TextInput style={styles.input} value={bio} onChangeText={setBio} placeholder="Bio" />
               </View>
-            </View>
-          </Modal>
-          {/* edit profile  */}
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={editModalVisible}
-            onRequestClose={() => setEditModalVisible(!editModalVisible)}
-          >
-            <View style={styles.editmodalOvarlay}>
-              <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.editmodalContainer}
-              >
-                <Pressable
-                  style={styles.editcloseButton}
-                  onPress={() => {
-                    setEditModalVisible(false);
-                  }}
-                >
-                  <Ionicons name="close" size={35} color="black" />
-                </Pressable>
-
-                <ScrollView>
-                  <Text style={styles.editmodalTitle}>Update Profile</Text>
-                  <View>
-                    <Pressable
-                      style={styles.imageContainer}
-                      onPress={handleImagePicker}
-                    >
-                      <Text>Add Profile Image</Text>
-
-                      <Image
-                        source={{ uri: profileImage }}
-                        style={styles.editprofileImage}
-                      />
-                    </Pressable>
-                  </View>
-                  <View>
-                    <Text>Name</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={name}
-                      onChangeText={(text) => setName(text)}
-                      placeholder="update name"
-                    />
-                  </View>
-
-                  <View>
-                    <Text>Bio</Text>
-                    <TextInput
-                      value={bio}
-                      onChangeText={(text) => setBio(text)}
-                      style={styles.input}
-                      placeholder="bio"
-                    />
-                  </View>
-
-                  <View>
-                    <Text>City</Text>
-                    <TextInput
-                      value={city}
-                      onChangeText={(text) => setCity(text)}
-                      style={styles.input}
-                      placeholder="city"
-                    />
-                  </View>
-
-                  <View>
-                    <Text>Age</Text>
-                    <TextInput
-                      value={age}
-                      onChangeText={(text) => setAge(text)}
-                      style={styles.input}
-                      placeholder="Age"
-                    />
-                  </View>
-
-                  <TouchableOpacity
-                    onPress={handleSaveChanges}
-                    style={styles.saveButton}
-                  >
-                    <Text style={styles.saveButtonText}>Save changess</Text>
-                  </TouchableOpacity>
-                </ScrollView>
-              </KeyboardAvoidingView>
-            </View>
-          </Modal>
-          {/* change password  */}
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={changePassword}
-            onRequestClose={() => setChangePasswordModal(false)}
-          >
-            <View style={styles.passwordChangemodalOvarlay}>
-              <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.editmodalContainer}
-              >
-                <Pressable
-                  style={styles.passwordChangecloseButton}
-                  onPress={() => setChangePasswordModal(false)}
-                >
-                  <Ionicons name="close" size={35} color="black" />
-                </Pressable>
-
-                <ScrollView>
-                  <Text style={styles.passwordChangemodalTitle}>
-                    Change password
-                  </Text>
-                  <View>
-                    <Text
-                      style={{ padding: 7, fontSize: 18, fontWeight: "bold" }}
-                    >
-                      New Password
-                    </Text>
-                    <TextInput
-                      value={newPassword}
-                      onChangeText={(text) => setNewPassword(text)}
-                      style={styles.passwordChangeinput}
-                      placeholder="new password"
-                    />
-                  </View>
-
-                  <View>
-                    <Text
-                      style={{ padding: 7, fontSize: 18, fontWeight: "bold" }}
-                    >
-                      Confirm Password
-                    </Text>
-                    <TextInput
-                      value={confirmPassword}
-                      onChangeText={(text) => setConfirmPassword(text)}
-                      style={styles.passwordChangeinput}
-                      placeholder="confirm password"
-                    />
-                  </View>
-
-                  <TouchableOpacity
-                    onPress={handleChangeNewPassword}
-                    style={styles.saveButton}
-                  >
-                    <Text style={styles.saveButtonText}>Save changes</Text>
-                  </TouchableOpacity>
-                </ScrollView>
-              </KeyboardAvoidingView>
-            </View>
-          </Modal>
-          {/* // like option */}
-          {/* <Modal
-      animationType="slide"
-      transparent={true}
-      visible={likeOptionModal}
-      onRequestClose={() =>setLikeOptionModal(false)}
-    > */}
-          {/* <View style={styles.likesOptionmodalOverlay}>
-        <View style={styles.likesOptionmodalContent}>
-          <FlatList
-            key={3} // Ensures re-render when needed
-            data={likeImagesLink}
-            keyExtractor={(item, index) => index.toString()}
-            numColumns={3} // 3 images per row
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.likesOptionimageContainer}>
-                <Image source={{ uri: item }} style={styles.likesOptionimage} />
+              <View>
+                <Text>City</Text>
+                <TextInput style={styles.input} value={city} onChangeText={setCity} placeholder="City" />
+              </View>
+              <View>
+                <Text>Age</Text>
+                <TextInput style={styles.input} value={age} onChangeText={setAge} placeholder="Age" keyboardType="numeric" />
+              </View>
+              <TouchableOpacity onPress={handleSaveChanges} style={styles.saveButton}>
+                <Text style={styles.saveButtonText}>Save Changes</Text>
               </TouchableOpacity>
-            )}
-          />
+            </ScrollView>
+          </KeyboardAvoidingView>
         </View>
-      </View> */}
-          {/* </Modal> */}
-          {likeImagesLink ? (
-            <View style={styles.likesOptionmodalOverlay}>
-              <View style={styles.likesOptionmodalContent}>
-                <ScrollView 
-                refreshControl={
-                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-                contentContainerStyle={styles.imageGrid}>
-                  {(selectedOption === "likes"
-                    ? likeImagesLink
-                    : savedImageLink
-                  ).map((meal) => (
-                    <TouchableOpacity
-                    onPress={()=>seeLikedFood(meal.id)}
-                      key={meal.id}
-                      style={styles.likesOptionimageContainer}
-                    >
-                      <Image
-                        source={{ uri: meal.link }}
-                        style={styles.likesOptionimage}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+      </Modal>
+
+      {/* Change Password Modal */}
+      <Modal animationType="slide" transparent visible={changePasswordModal} onRequestClose={() => setChangePasswordModal(false)}>
+        <View style={styles.passwordChangemodalOvarlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.editmodalContainer}>
+            <Pressable style={styles.passwordChangecloseButton} onPress={() => setChangePasswordModal(false)}>
+              <Ionicons name="close" size={35} color="black" />
+            </Pressable>
+            <ScrollView>
+              <Text style={styles.passwordChangemodalTitle}>Change Password</Text>
+              <View>
+                <Text style={{ padding: 7, fontSize: 18, fontWeight: "bold" }}>New Password</Text>
+                <TextInput
+                  style={styles.passwordChangeinput}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="New password"
+                  secureTextEntry
+                />
               </View>
-            </View>
-          ) : (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignContent: "center",
-                backgroundColor: "#fff",
-              }}
-            >
-              <ActivityIndicator size="large" color="blue" />
-            </View>
-          )}
-          {/* //saved images */}
-          {/* <View style={styles.likesOptionmodalOverlay}>
-        <View style={styles.likesOptionmodalContent}>
-          <SaveOption />
+              <View>
+                <Text style={{ padding: 7, fontSize: 18, fontWeight: "bold" }}>Confirm Password</Text>
+                <TextInput
+                  style={styles.passwordChangeinput}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm password"
+                  secureTextEntry
+                />
+              </View>
+              <TouchableOpacity onPress={handleChangeNewPassword} style={styles.saveButton}>
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </View>
-      </View> */}
+      </Modal>
+
+      {/* Liked/Saved Content */}
+      {likeImagesLink.length || savedImageLink.length ? (
+        <View style={styles.likesOptionmodalOverlay}>
+          <ScrollView
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            contentContainerStyle={styles.imageGrid}
+          >
+            {(selectedOption === "likes" ? likeImagesLink : savedImageLink).map((meal) => (
+              <TouchableOpacity key={meal.id} style={styles.likesOptionimageContainer} onPress={() => seeLikedFood(meal.id)}>
+                <Image source={{ uri: meal.link }} style={styles.likesOptionimage} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       ) : (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignContent: "center",
-            backgroundColor: "#fff",
-          }}
-        >
-          <ActivityIndicator size="large" color="blue" />;
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text>No {selectedOption} yet</Text>
         </View>
       )}
-    </>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 10, // Adjusted padding for better spacing
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 15,
-    backgroundColor: "#FFF",
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#973838",
-  },
-  profileSection: {
-    alignItems: "center",
-    paddingVertical: 20,
-    backgroundColor: "#FFF",
-    marginBottom: 10,
-    borderRadius: 40,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 10,
-  },
-  FullNameStyle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  UserNameStyle: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 10,
-  },
-  bioText: {
-    fontSize: 14,
-    color: "#555",
-    textAlign: "center",
-    paddingHorizontal: 20,
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  UserLocation: {
-    fontSize: 14,
-    color: "#555",
-    marginLeft: 5,
-  },
-  joinDateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  joinDate: {
-    fontSize: 14,
-    color: "#555",
-    marginLeft: 5,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    gap: 30,
-    backgroundColor: "#FFF",
-    paddingVertical: 10,
-    marginBottom: 10,
-  },
-  stat: {
-    flexDirection: "row",
-    alignItems: "center",
-    textAlign: "centers",
-    gap: 10,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  statLabel: {
-    fontSize: 14,
-    color: "#666",
-  },
-  optionsContainer: {
-    flex: 1,
-  },
-  optionInsideContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-
-  postsOption: {
-    backgroundColor: "#973838",
-    borderRadius: 10,
-  },
-  postsOptionText: {
-    color: "white",
-    paddingHorizontal: 20,
-    paddingVertical: 7,
-    fontSize: 17,
-    fontWeight: "bold",
-  },
-
-  likesOption: {
-    backgroundColor: "#973838",
-    borderRadius: 10,
-  },
-  likesOptionText: {
-    color: "white",
-    paddingHorizontal: 20,
-    paddingVertical: 7,
-    fontSize: 17,
-    fontWeight: "bold",
-  },
-
-  savedOption: {
-    backgroundColor: "#973838",
-    borderRadius: 10,
-  },
-  savedOptionText: {
-    color: "white",
-    paddingHorizontal: 20,
-    paddingVertical: 7,
-    fontSize: 17,
-    fontWeight: "bold",
-  },
-
-  optionButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    backgroundColor: "#973838",
-    marginHorizontal: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  optionText: {
-    fontSize: 14,
-    color: "#FFF",
-    fontWeight: "600",
-  },
-
-  modalContainer: {
-    flex: 1,
-    left: 80,
-    top: 0,
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0)",
-    gap: 10,
-  },
-  modalContent: {
-    width: "auto",
-    height: "auto",
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 20,
-    elevation: 4,
-    gap: 20,
-  },
-
-  // edit modal
-  editmodalOvarlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-
-  editmodalContainer: {
-    width: "100%",
-    height: "70%",
-    backgroundColor: "#f7efef",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 15,
-    alignContent: "center",
-    // alignItems: "center",
-  },
-  editcloseButton: {
-    // position: "absolute",
-    top: 10,
-    justifyContent: "flex-end",
-    paddingBottom: 10,
-  },
-  editmodalTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-
-  imageContainer: {
-    alignItems: "center",
-    marginBottom: 15,
-  },
-
-  editprofileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-
-  input: {
-    borderBottomWidth: 1,
-    marginBottom: 10,
-    paddingVertical: 5,
-  },
-
-  saveButton: {
-    backgroundColor: "blue",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  saveButtonText: {
-    color: "white",
-    fontSize: 16,
-  },
-
-  //  change password modal
-
-  passwordChangemodalOvarlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-
-  passwordChangemodalContainer: {
-    width: "100%",
-    height: 400,
-    backgroundColor: "#f7efef",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 15,
-    alignContent: "center",
-    // alignItems: "center",
-  },
-  passwordChangecloseButton: {
-    // position: "absolute",
-    top: 10,
-    justifyContent: "flex-end",
-    paddingBottom: 10,
-  },
-  passwordChangemodalTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-
-  passwordChangeinput: {
-    borderBottomWidth: 1,
-    marginBottom: 20,
-    paddingVertical: 5,
-  },
-
-  saveButton: {
-    backgroundColor: "blue",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  saveButtonText: {
-    color: "white",
-    fontSize: 16,
-  },
-
-  // liked image show
-  //  likesOptionmodalOverlay: {
-  //   flex: 1,
-  //   justifyContent: 'flex-end', // Aligns modal to the bottom
-  //   backgroundColor: 'rgba(0, 0, 0, 0)', // Dim background
-  // },
-  // likesOptionmodalContent: {
-  //    height: 320,// Modal covers 50% of screen height
-  //   backgroundColor: '#fff',
-  //   borderTopLeftRadius: 20,
-  //   borderTopRightRadius: 20,
-  //   padding: 10,
-  // },
-  // likesOptionimageContainer: {
-  //   flex: 1,
-  //   aspectRatio: 1, // Keeps images square
-  //   margin: 2,
-  // },
-  // likesOptionimage: {
-  //   width: '100%',
-  //   height: '100%',
-  //   borderRadius: 5, // Optional rounded corners
-  // },
-
-  likesOptionmodalOverlay: {
-    flex: 1,
-    justifyContent: "flex-end", // Aligns modal to the bottom
-    backgroundColor: "rgba(0,0,0,0.5)", // Dim background
-  },
-  likesOptionmodalContent: {
-    height: 320, // Modal covers 50% of screen height
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 10,
-    paddingBottom:55
-  },
-  imageGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap", // Enables grid-like layout
-    justifyContent: "space-between", // Distributes images evenly
-  },
-  likesOptionimageContainer: {
-    width: "32%", // 3 images per row with small margin
-    aspectRatio: 1, // Keeps images square
-    marginBottom: 4, // Space between rows
-  },
-  likesOptionimage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 5, // Optional rounded corners
-  },
-});
 
 export default ProfileScreen;
