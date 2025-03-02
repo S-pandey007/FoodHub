@@ -25,6 +25,17 @@ The **Smart Recipe Discovery App** is a React Native application designed to off
 ## 📸 Screenshots
 
 <img src="./FoodHubApp/assets/img/1.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/2.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/3.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/4.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/5.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/6.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/7.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/8.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/9.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/10.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/11.jpg"  width="300" height="200">
+<img src="./FoodHubApp/assets/img/12.jpg"  width="300" height="200">
 
 ## 🛠️ Usage
 
